@@ -1,0 +1,27 @@
+[package]
+name = "gic-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+readme.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[[bin]]
+name = "gic"
+path = "src/main.rs"
+
+[dependencies]
+gic-core.workspace = true
+gic-config.workspace = true
+gic-logging.workspace = true
+gic-tui.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+ratatui.workspace = true

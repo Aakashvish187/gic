@@ -1,0 +1,55 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/gic-core",
+    "crates/gic-config",
+    "crates/gic-logging",
+    "crates/gic-tui",
+    "crates/gic-cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75.0"
+authors = ["Aakash Vishwakarma <aakashvish1920@gmail.com>"]
+description = "General Infrastructure Console (GIC) - High-performance terminal application for infrastructure management"
+license = "MIT"
+repository = "https://github.com/Aakashvish187/gic"
+homepage = "https://github.com/Aakashvish187"
+documentation = "https://github.com/Aakashvish187/gic#readme"
+keywords = ["infrastructure", "tui", "kubernetes", "terraform", "devsecops"]
+categories = ["command-line-utilities", "development-tools"]
+readme = "README.md"
+
+[workspace.dependencies]
+# Internal workspace crates
+gic-core = { path = "crates/gic-core" }
+gic-config = { path = "crates/gic-config" }
+gic-logging = { path = "crates/gic-logging" }
+gic-tui = { path = "crates/gic-tui" }
+
+# Third-party dependencies
+anyhow = "1.0"
+thiserror = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tempfile = "3.8"
+toml = "0.8"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+ratatui = "0.26"
+crossterm = "0.27"
+
+[profile.dev]
+opt-level = 0
+debug = true
+debug-assertions = true
+overflow-checks = true
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "unwind"
+strip = true

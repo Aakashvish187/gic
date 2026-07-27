@@ -1,0 +1,28 @@
+[package]
+name = "gic-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+readme.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+thiserror.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+git2 = "0.18"
+ignore = "0.4"
+dashmap = "5.5"
+rayon = "1.9"
+tracing.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

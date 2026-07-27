@@ -1,0 +1,25 @@
+# Generated target directory
+/target/
+
+# Cargo binary lockfile (optional for library workspace, committed for application)
+# Cargo.lock
+
+# Log files
+*.log
+logs/
+
+# Operating system artifacts
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE & Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment variables
+.env
+.env.*
+!.env.example
