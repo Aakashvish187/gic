@@ -1,0 +1,24 @@
+name: Nightly Integration Build
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # Every night at 02:00 UTC
+  workflow_dispatch:
+
+jobs:
+  nightly-test:
+    name: Nightly Test & Quality Assurance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Run Full Test Suite
+        run: cargo test --all --verbose
+
+      - name: Build Nightly Release
+        run: cargo build --release

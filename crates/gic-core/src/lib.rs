@@ -16,8 +16,11 @@ pub mod metadata;
 pub mod parser;
 pub mod rules;
 pub mod search;
+pub mod security;
 pub mod shutdown;
+pub mod starter_engine;
 pub mod terraform;
+pub mod updater;
 pub mod yaml;
 
 pub use metadata::{AboutInfo, AboutProvider, DefaultAboutProvider, ProjectMetadata};
@@ -89,3 +92,11 @@ pub use diagnostics::{
     QuickFixKind, Rule, RuleCategory, RuleConfig, RuleMetadata, RulePriority, RuleRegistry,
     TextEdit, ValidationContext, ValidationEngine, ValidationMetrics, Validator, ValidatorRegistry,
 };
+
+pub mod language_engine;
+
+pub mod workspace;
+pub use workspace::*;
+
+pub mod state;
+pub use state::*;

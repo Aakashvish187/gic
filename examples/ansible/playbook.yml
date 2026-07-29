@@ -1,0 +1,31 @@
+---
+- name: Deploy Production Web Stack
+  hosts: webservers
+  become: yes
+  vars:
+    app_port: 8080
+
+  tasks:
+    - name: Ensure Nginx is installed
+      apt:
+        name: nginx
+        state: present
+        update_cache: yes
+
+    - name: Ensure Nginx is started and enabled
+      systemd:
+        name: nginx
+        state: started
+        enabled: yes
+
+    - name: Copy Nginx Configuration
+      template:
+        src: templates/nginx.conf.j2
+        dest: /etc/nginx/sites-available/default
+      notify: Reload Nginx
+
+  handlers:
+    - name: Reload Nginx
+      systemd:
+        name: nginx
+        state: reloaded

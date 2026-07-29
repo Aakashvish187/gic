@@ -25,3 +25,4 @@ gic-tui.workspace = true
 anyhow.workspace = true
 tracing.workspace = true
 ratatui.workspace = true
+crossterm.workspace = true

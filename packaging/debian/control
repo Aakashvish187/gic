@@ -1,0 +1,11 @@
+Package: gic
+Version: 1.0.0
+Section: utils
+Priority: optional
+Architecture: amd64
+Maintainer: Aakash Vishwakarma <aakash@devops.org>
+Description: High-performance DevOps TUI Editor & Intelligence Platform
+ GIC (Infrastructure-as-Code Editor) is a modern terminal-based editor
+ optimized for Kubernetes, Docker, Terraform, Ansible, and GitHub Actions
+ configurations with built-in schema validation, starter wizards, and IntelliSense.
+Homepage: https://github.com/Aakashvish187/gic

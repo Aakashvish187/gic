@@ -6,52 +6,47 @@ use gic_core::{
     GicError, InputEvent, KeyCode, KeyInput, KeyModifiers, MouseAction, MouseButton, MouseInput,
     UIConfig,
 };
-use std::time::Duration;
 
 /// Event listener component converting raw terminal I/O events to domain events.
-pub struct EventStream {
-    tick_rate: Duration,
-}
+pub struct EventStream;
 
 impl EventStream {
-    pub fn new(ui_config: &UIConfig) -> Self {
-        Self {
-            tick_rate: Duration::from_millis(ui_config.tick_rate_ms),
-        }
+    pub fn new(_ui_config: &UIConfig) -> Self {
+        Self
     }
 
-    /// Polls for next input event or produces a `Tick` event if duration elapses.
+    /// Blocks until the next input event arrives.
     pub fn next_event(&self) -> Result<InputEvent, GicError> {
-        if event::poll(self.tick_rate)
-            .map_err(|e| GicError::Terminal(format!("Event poll error: {}", e)))?
-        {
-            match event::read()
-                .map_err(|e| GicError::Terminal(format!("Event read error: {}", e)))?
-            {
-                CrosstermEvent::Key(key_event) => {
-                    let modifiers = parse_modifiers(key_event.modifiers);
-                    let code = parse_key_code(key_event.code);
-                    Ok(InputEvent::Key(KeyInput::new(code, modifiers)))
+        let raw_event = event::read()
+            .map_err(|e| GicError::Terminal(format!("Event read error: {}", e)))?;
+
+        match raw_event {
+            CrosstermEvent::Key(key_event) => {
+                // Ignore Release events to prevent duplicate keystrokes
+                if key_event.kind == crossterm::event::KeyEventKind::Release {
+                    return Ok(InputEvent::Tick);
                 }
-                CrosstermEvent::Mouse(mouse_event) => {
-                    let modifiers = parse_modifiers(mouse_event.modifiers);
-                    if let Some(action) = parse_mouse_action(mouse_event.kind) {
-                        Ok(InputEvent::Mouse(MouseInput {
-                            action,
-                            column: mouse_event.column,
-                            row: mouse_event.row,
-                            modifiers,
-                        }))
-                    } else {
-                        Ok(InputEvent::Tick)
-                    }
-                }
-                CrosstermEvent::Resize(width, height) => Ok(InputEvent::Resize { width, height }),
-                CrosstermEvent::Paste(s) => Ok(InputEvent::Paste(s)),
-                _ => Ok(InputEvent::Tick),
+
+                let modifiers = parse_modifiers(key_event.modifiers);
+                let code = parse_key_code(key_event.code);
+                Ok(InputEvent::Key(KeyInput::new(code, modifiers)))
             }
-        } else {
-            Ok(InputEvent::Tick)
+            CrosstermEvent::Mouse(mouse_event) => {
+                let modifiers = parse_modifiers(mouse_event.modifiers);
+                if let Some(action) = parse_mouse_action(mouse_event.kind) {
+                    Ok(InputEvent::Mouse(MouseInput {
+                        action,
+                        column: mouse_event.column,
+                        row: mouse_event.row,
+                        modifiers,
+                    }))
+                } else {
+                    Ok(InputEvent::Tick)
+                }
+            }
+            CrosstermEvent::Resize(width, height) => Ok(InputEvent::Resize { width, height }),
+            CrosstermEvent::Paste(s) => Ok(InputEvent::Paste(s)),
+            _ => Ok(InputEvent::Tick),
         }
     }
 }

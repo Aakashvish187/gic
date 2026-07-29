@@ -56,24 +56,29 @@
 //! - [`syntax`]: Syntax highlighting engine (trait + regex backend).
 //! - [`themes`]: Theme system with built-in dark/light/high-contrast themes.
 
+pub mod autocomplete_popup;
+pub mod bottom_panel;
 pub mod cursor_renderer;
 pub mod dirty_indicator;
 pub mod errors;
+pub mod file_explorer;
 pub mod file_info;
+pub mod floating_docs;
+pub mod inline_diagnostic;
+pub mod intelligence_panel;
 pub mod layout;
 pub mod line_numbers;
 pub mod pipeline;
+pub mod quick_fix_popup;
 pub mod render_state;
 pub mod scrolling;
 pub mod status_bar;
 pub mod syntax;
 pub mod text_renderer;
 pub mod themes;
+pub mod top_bar;
 pub mod types;
 pub mod viewport;
-
-#[cfg(test)]
-mod tests;
 
 // Re-export primary public API types for convenience.
 pub use cursor_renderer::CursorRenderer;

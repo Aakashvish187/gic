@@ -1,5 +1,5 @@
 use crossterm::{
-    cursor::{Hide, Show},
+    cursor::{Hide, Show, SetCursorStyle},
     event::{DisableMouseCapture, EnableMouseCapture},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
@@ -23,7 +23,7 @@ impl TerminalEngine {
         })?;
 
         let mut stdout = io::stdout();
-        if let Err(e) = execute!(stdout, EnterAlternateScreen, Hide) {
+        if let Err(e) = execute!(stdout, EnterAlternateScreen, SetCursorStyle::SteadyBar) {
             let _ = disable_raw_mode();
             return Err(GicError::Terminal(format!(
                 "Failed to enter alternate screen: {}",
@@ -90,7 +90,7 @@ impl Drop for TerminalEngine {
         if self.mouse_captured {
             let _ = execute!(self.terminal.backend_mut(), DisableMouseCapture);
         }
-        let _ = execute!(self.terminal.backend_mut(), LeaveAlternateScreen, Show);
+        let _ = execute!(self.terminal.backend_mut(), LeaveAlternateScreen, SetCursorStyle::DefaultUserShape);
         let _ = disable_raw_mode();
     }
 }

@@ -36,6 +36,14 @@ pub trait SyntaxHighlighter {
     /// A vector of [`HighlightedToken`]s covering the entire line.
     fn highlight_line(&self, line: &str, line_index: usize) -> Vec<HighlightedToken>;
 
+    /// Updates the highlighter with the full text buffer.
+    ///
+    /// This is used by stateful highlighters (e.g. tree-sitter) that need
+    /// to parse the entire document to provide accurate highlighting.
+    ///
+    /// The default implementation does nothing.
+    fn update_buffer(&self, _text: &str) {}
+
     /// Returns the human-readable name of the language this highlighter supports.
     fn language_name(&self) -> &str;
 

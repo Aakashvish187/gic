@@ -4,8 +4,13 @@ use std::path::PathBuf;
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct CliOptions {
     pub config_path: Option<PathBuf>,
+    pub file_path: Option<PathBuf>,
     pub about: bool,
     pub version: bool,
+    pub update: bool,
+    pub debug: bool,
+    pub template: bool,
+    pub new_file: bool,
 }
 
 impl CliOptions {
@@ -21,8 +26,13 @@ impl CliOptions {
         T: Into<String>,
     {
         let mut config_path = None;
+        let mut file_path = None;
         let mut about = false;
         let mut version = false;
+        let mut update = false;
+        let mut debug = false;
+        let mut template = false;
+        let mut new_file = false;
         let mut iter = args.into_iter().map(Into::into);
 
         // Skip binary name
@@ -41,14 +51,35 @@ impl CliOptions {
                 "-v" | "--version" | "version" => {
                     version = true;
                 }
-                _ => {}
+                "-u" | "--update" | "update" => {
+                    update = true;
+                }
+                "--debug" => {
+                    debug = true;
+                }
+                "-t" | "--template" => {
+                    template = true;
+                }
+                "-n" | "--new" => {
+                    new_file = true;
+                }
+                other => {
+                    if !other.starts_with('-') && file_path.is_none() {
+                        file_path = Some(PathBuf::from(other));
+                    }
+                }
             }
         }
 
         Self {
             config_path,
+            file_path,
             about,
             version,
+            update,
+            debug,
+            template,
+            new_file,
         }
     }
 }
@@ -95,5 +126,12 @@ mod tests {
         let args = vec!["gic", "--version"];
         let opts = CliOptions::parse_from(args);
         assert!(opts.version);
+    }
+
+    #[test]
+    fn test_parse_file_path() {
+        let args = vec!["gic", "file.yaml"];
+        let opts = CliOptions::parse_from(args);
+        assert_eq!(opts.file_path, Some(PathBuf::from("file.yaml")));
     }
 }

@@ -27,9 +27,11 @@ pub mod languages;
 pub mod regex_highlighter;
 pub mod syntax_renderer;
 pub mod token;
+pub mod tree_sitter;
 
 pub use highlighter::SyntaxHighlighter;
 pub use languages::{LanguageDefinition, LanguageRegistry};
 pub use regex_highlighter::RegexHighlighter;
 pub use syntax_renderer::SyntaxRenderer;
 pub use token::{HighlightedToken, TokenKind};
+pub use tree_sitter::TreeSitterHighlighter;

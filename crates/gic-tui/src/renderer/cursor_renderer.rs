@@ -148,9 +148,9 @@ impl CursorRenderer {
     /// after rendering the frame.
     pub fn crossterm_cursor_style(&self) -> crossterm::cursor::SetCursorStyle {
         match self.shape {
-            CursorShape::Block => crossterm::cursor::SetCursorStyle::SteadyBlock,
-            CursorShape::Beam => crossterm::cursor::SetCursorStyle::SteadyBar,
-            CursorShape::Underline => crossterm::cursor::SetCursorStyle::SteadyUnderScore,
+            CursorShape::Block => crossterm::cursor::SetCursorStyle::BlinkingBlock,
+            CursorShape::Beam => crossterm::cursor::SetCursorStyle::BlinkingBar,
+            CursorShape::Underline => crossterm::cursor::SetCursorStyle::BlinkingUnderScore,
         }
     }
 }

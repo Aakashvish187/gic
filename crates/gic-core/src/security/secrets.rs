@@ -2,7 +2,7 @@
 
 use crate::diagnostics::{DiagnosticPosition, DiagnosticRange};
 use crate::security::category::SecurityCategory;
-use crate::security::errors::{SecurityError, SecurityResult};
+use crate::security::errors::SecurityResult;
 use crate::security::evidence::FindingEvidence;
 use crate::security::findings::SecurityFinding;
 use crate::security::severity::SecuritySeverity;
@@ -48,7 +48,7 @@ impl SecretScanner {
                 rule_id: "SEC-002",
                 title: "AWS Secret Access Key Detected",
                 description: "Hardcoded AWS Secret Access Key exposed in file.",
-                pattern: Regex::new(r"(?i)\b(aws_secret_access_key|aws_secret_key)\s*[:=]\s*['""]?([A-Za-z0-9/+=]{40})['""]?")?,
+                pattern: Regex::new(r#"(?i)\b(aws_secret_access_key|aws_secret_key)\s*[:=]\s*['"]?([A-Za-z0-9/+=]{40})['"]?"#)?,
                 severity: SecuritySeverity::Critical,
                 remediation: "Revoke key immediately and use secret managers like AWS Secrets Manager.",
             },

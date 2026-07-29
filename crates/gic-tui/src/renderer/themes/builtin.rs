@@ -50,6 +50,17 @@ pub fn gic_dark() -> Theme {
             error: Color::Rgb(243, 139, 168),       // Red
             punctuation: Color::Rgb(147, 153, 178), // Overlay
         },
+
+        panel_bg: Color::Rgb(24, 24, 37),
+        panel_border: Color::Rgb(49, 50, 68),
+        panel_header: Color::Rgb(166, 173, 200),
+        top_bar_bg: Color::Rgb(17, 17, 27),
+        top_bar_fg: Color::Rgb(166, 173, 200),
+        top_bar_accent: Color::Rgb(137, 180, 250),
+        explorer_active: Color::Rgb(49, 50, 68),
+        diagnostic_error: Color::Rgb(243, 139, 168),
+        diagnostic_warning: Color::Rgb(249, 226, 175),
+        diagnostic_info: Color::Rgb(137, 180, 250),
     }
 }
 
@@ -92,6 +103,17 @@ pub fn gic_light() -> Theme {
             error: Color::Rgb(210, 15, 57),         // Red
             punctuation: Color::Rgb(108, 111, 133), // Subtext
         },
+
+        panel_bg: Color::Rgb(220, 224, 232),
+        panel_border: Color::Rgb(188, 192, 204),
+        panel_header: Color::Rgb(76, 79, 105),
+        top_bar_bg: Color::Rgb(204, 208, 218),
+        top_bar_fg: Color::Rgb(76, 79, 105),
+        top_bar_accent: Color::Rgb(30, 102, 245),
+        explorer_active: Color::Rgb(188, 192, 204),
+        diagnostic_error: Color::Rgb(210, 15, 57),
+        diagnostic_warning: Color::Rgb(223, 142, 29),
+        diagnostic_info: Color::Rgb(30, 102, 245),
     }
 }
 
@@ -134,6 +156,17 @@ pub fn high_contrast() -> Theme {
             error: Color::Rgb(255, 50, 50),         // Bright Red
             punctuation: Color::Rgb(200, 200, 200), // Light Gray
         },
+
+        panel_bg: Color::Rgb(20, 20, 20),
+        panel_border: Color::Rgb(80, 80, 80),
+        panel_header: Color::Rgb(255, 255, 255),
+        top_bar_bg: Color::Rgb(10, 10, 10),
+        top_bar_fg: Color::Rgb(255, 255, 255),
+        top_bar_accent: Color::Rgb(0, 150, 255),
+        explorer_active: Color::Rgb(0, 80, 160),
+        diagnostic_error: Color::Rgb(255, 50, 50),
+        diagnostic_warning: Color::Rgb(255, 200, 50),
+        diagnostic_info: Color::Rgb(100, 180, 255),
     }
 }
 

@@ -1,0 +1,12 @@
+ FROM  UBANTU
+  
+  RUN APT UPDATE
+  RUN APT INSTALL NGINX
+  
+  
+  EXPOSE EIGHTY
+  
+  COPY 
+  
+  CMD
+

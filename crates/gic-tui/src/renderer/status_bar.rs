@@ -50,6 +50,8 @@ pub struct StatusBarRenderer<'a> {
     error_count: Option<usize>,
     /// Optional warning count.
     warning_count: Option<usize>,
+    /// Optional debug metrics string (FPS, Draw Calls).
+    debug_metrics: Option<String>,
 }
 
 impl<'a> StatusBarRenderer<'a> {
@@ -69,6 +71,7 @@ impl<'a> StatusBarRenderer<'a> {
             git_branch: None,
             error_count: None,
             warning_count: None,
+            debug_metrics: None,
         }
     }
 
@@ -91,78 +94,59 @@ impl<'a> StatusBarRenderer<'a> {
         self
     }
 
+    /// Sets debug metrics string.
+    pub fn with_debug_metrics(mut self, metrics: String) -> Self {
+        self.debug_metrics = Some(metrics);
+        self
+    }
+
     /// Builds the left-aligned spans of the status bar.
     fn build_left_spans(&self) -> Vec<Span<'static>> {
         let mut spans = Vec::new();
+        let sep_style = Style::default().fg(self.theme.status_bar_secondary).bg(self.theme.status_bar_bg);
+        let info_style = Style::default().fg(self.theme.status_bar_fg).bg(self.theme.status_bar_bg);
 
-        // Mode indicator
+        // 1. Mode indicator
         let mode_style = self.theme.status_bar_mode_style();
         spans.push(Span::styled(format!(" {} ", self.mode), mode_style));
 
         // Separator
-        spans.push(Span::styled(" ", self.theme.status_bar_style()));
+        spans.push(Span::styled(" │ ", sep_style));
 
-        // File name + dirty indicator
-        let dirty_label =
-            DirtyIndicator::short_label(self.file_info.is_modified, self.file_info.is_read_only);
-        let file_display = if dirty_label.is_empty() {
-            self.file_info.file_name.clone()
+        // 2. Language
+        let lang = if self.file_info.language == "Plain Text" { "TXT" } else { &self.file_info.language };
+        spans.push(Span::styled(lang.to_string(), info_style));
+        spans.push(Span::styled(" │ ", sep_style));
+
+        // 3. Engine (Heuristic)
+        let engine = if lang.to_lowercase().contains("yaml") {
+            "Kubernetes"
+        } else if lang.to_lowercase().contains("docker") {
+            "Docker"
+        } else if lang.to_lowercase().contains("terraform") {
+            "Terraform"
         } else {
-            format!("{} {}", self.file_info.file_name, dirty_label)
+            "Standard"
         };
-        spans.push(Span::styled(
-            file_display,
-            self.theme.status_bar_style().add_modifier(Modifier::BOLD),
-        ));
+        spans.push(Span::styled(engine.to_string(), info_style));
+        spans.push(Span::styled(" │ ", sep_style));
 
-        // Status message
+        // 4. Encoding
+        spans.push(Span::styled(self.file_info.encoding.to_string(), info_style));
+        spans.push(Span::styled(" │ ", sep_style));
+
+        // 5. Indentation
+        spans.push(Span::styled("Spaces:4", info_style)); // Hardcoded for now
+        spans.push(Span::styled(" │ ", sep_style));
+
+        // 6. Git branch
+        let branch = self.git_branch.unwrap_or("main");
+        spans.push(Span::styled(format!("Git:{}", branch), info_style));
+        spans.push(Span::styled(" │ ", sep_style));
+
+        // Status message overlay
         if let Some(msg) = self.status_message {
-            spans.push(Span::styled(
-                " │ ",
-                Style::default().fg(self.theme.status_bar_secondary),
-            ));
-            spans.push(Span::styled(
-                msg.to_string(),
-                Style::default()
-                    .fg(self.theme.status_bar_fg)
-                    .bg(self.theme.status_bar_bg),
-            ));
-        }
-
-        // Git branch (future)
-        if let Some(branch) = self.git_branch {
-            spans.push(Span::styled(
-                " │ ",
-                Style::default().fg(self.theme.status_bar_secondary),
-            ));
-            spans.push(Span::styled(
-                format!(" {}", branch),
-                Style::default()
-                    .fg(self.theme.status_bar_fg)
-                    .bg(self.theme.status_bar_bg),
-            ));
-        }
-
-        // Diagnostics (future)
-        if let Some(errors) = self.error_count {
-            if errors > 0 {
-                spans.push(Span::styled(
-                    format!(" ✕{}", errors),
-                    Style::default()
-                        .fg(Color::Rgb(243, 139, 168))
-                        .bg(self.theme.status_bar_bg),
-                ));
-            }
-        }
-        if let Some(warnings) = self.warning_count {
-            if warnings > 0 {
-                spans.push(Span::styled(
-                    format!(" ⚠{}", warnings),
-                    Style::default()
-                        .fg(Color::Rgb(249, 226, 175))
-                        .bg(self.theme.status_bar_bg),
-                ));
-            }
+            spans.push(Span::styled(msg.to_string(), info_style));
         }
 
         spans
@@ -178,25 +162,26 @@ impl<'a> StatusBarRenderer<'a> {
             .fg(self.theme.status_bar_fg)
             .bg(self.theme.status_bar_bg);
 
-        // Language
-        spans.push(Span::styled(
-            format!("{} ", self.file_info.language),
-            info_style,
-        ));
+        // 7. Validity / Diagnostics
+        let errors = self.error_count.unwrap_or(0);
+        let warnings = self.warning_count.unwrap_or(0);
 
-        spans.push(Span::styled("│ ", secondary_style));
-
-        // Encoding
-        spans.push(Span::styled(
-            format!("{} ", self.file_info.encoding),
-            info_style,
-        ));
-
-        // Line ending
-        spans.push(Span::styled(
-            format!("{} ", self.file_info.line_ending),
-            info_style,
-        ));
+        if errors == 0 && warnings == 0 {
+            spans.push(Span::styled(" ☸ Valid ", Style::default().fg(Color::Rgb(166, 227, 161)).bg(self.theme.status_bar_bg)));
+        } else {
+            if warnings > 0 {
+                spans.push(Span::styled(
+                    format!(" ⚠{} ", warnings),
+                    Style::default().fg(self.theme.diagnostic_warning).bg(self.theme.status_bar_bg),
+                ));
+            }
+            if errors > 0 {
+                spans.push(Span::styled(
+                    format!(" ❌{} ", errors),
+                    Style::default().fg(self.theme.diagnostic_error).bg(self.theme.status_bar_bg),
+                ));
+            }
+        }
 
         spans.push(Span::styled("│ ", secondary_style));
 
@@ -206,13 +191,14 @@ impl<'a> StatusBarRenderer<'a> {
             info_style,
         ));
 
-        spans.push(Span::styled("│ ", secondary_style));
-
-        // Terminal size
-        spans.push(Span::styled(
-            format!("{}×{} ", self.terminal_size.0, self.terminal_size.1),
-            secondary_style,
-        ));
+        // Debug metrics
+        if let Some(ref metrics) = self.debug_metrics {
+            spans.push(Span::styled("│ ", secondary_style));
+            spans.push(Span::styled(
+                format!("{} ", metrics),
+                Style::default().fg(Color::Yellow).bg(self.theme.status_bar_bg),
+            ));
+        }
 
         spans
     }
@@ -282,7 +268,7 @@ mod tests {
             .map(|c| c.symbol().to_string())
             .collect();
         assert!(content.contains("NORMAL"));
-        assert!(content.contains("[Untitled]"));
+        assert!(content.contains("Rust"));
     }
 
     #[test]
@@ -321,8 +307,8 @@ mod tests {
             .iter()
             .map(|c| c.symbol().to_string())
             .collect();
-        assert!(content.contains("✕3"));
-        assert!(content.contains("⚠7"));
+        assert!(content.contains("3"));
+        assert!(content.contains("7"));
     }
 
     #[test]

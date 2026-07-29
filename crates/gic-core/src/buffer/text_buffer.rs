@@ -94,9 +94,22 @@ impl TextBuffer {
         self.lines.get(row).map(|s| s.as_str())
     }
 
-    /// Consolidates all lines into a single multi-line String.
     pub fn text(&self) -> String {
         self.lines.join("\n")
+    }
+
+    /// Sets the entire buffer text to the new content.
+    pub fn set_text(&mut self, text: &str) {
+        let lines: Vec<String> = if text.is_empty() {
+            vec![String::new()]
+        } else {
+            text.split('\n')
+                .map(|s| s.trim_end_matches('\r').to_string())
+                .collect()
+        };
+        self.lines = lines;
+        self.cursor.clamp(&self.lines);
+        self.is_modified = true;
     }
 
     /// Returns true if buffer contains no text.

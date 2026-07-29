@@ -93,6 +93,28 @@ pub struct Theme {
     // ─── Syntax ──────────────────────────────────────────────────
     /// Syntax highlighting colors.
     pub syntax: SyntaxColors,
+
+    // ─── Panels ──────────────────────────────────────────────────
+    /// Panel background color (explorer, intelligence, bottom).
+    pub panel_bg: Color,
+    /// Panel border/separator color.
+    pub panel_border: Color,
+    /// Panel header text color.
+    pub panel_header: Color,
+    /// Top bar background.
+    pub top_bar_bg: Color,
+    /// Top bar foreground.
+    pub top_bar_fg: Color,
+    /// Top bar accent (brand color).
+    pub top_bar_accent: Color,
+    /// File explorer active item background.
+    pub explorer_active: Color,
+    /// Diagnostic error color.
+    pub diagnostic_error: Color,
+    /// Diagnostic warning color.
+    pub diagnostic_warning: Color,
+    /// Diagnostic info/hint color.
+    pub diagnostic_info: Color,
 }
 
 impl Theme {

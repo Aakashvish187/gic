@@ -3,10 +3,8 @@ use std::time::Instant;
 /// Performance & engine runtime telemetry metrics.
 #[derive(Debug, Clone)]
 pub struct EngineMetrics {
-    pub frame_count: u64,
-    pub tick_count: u64,
-    pub current_fps: f64,
-    pub last_frame_time: Instant,
+    pub draw_calls: u64,
+    pub last_render_time_ms: f64,
     pub screen_width: u16,
     pub screen_height: u16,
 }
@@ -14,10 +12,8 @@ pub struct EngineMetrics {
 impl Default for EngineMetrics {
     fn default() -> Self {
         Self {
-            frame_count: 0,
-            tick_count: 0,
-            current_fps: 0.0,
-            last_frame_time: Instant::now(),
+            draw_calls: 0,
+            last_render_time_ms: 0.0,
             screen_width: 80,
             screen_height: 24,
         }
@@ -29,25 +25,10 @@ impl EngineMetrics {
         Self::default()
     }
 
-    /// Increments frame count and updates calculated FPS based on elapsed frame duration.
-    pub fn record_frame(&mut self) {
-        self.frame_count += 1;
-        let elapsed = self.last_frame_time.elapsed().as_secs_f64();
-        if elapsed > 0.0 {
-            let instant_fps = 1.0 / elapsed;
-            // Exponential moving average for smooth FPS display
-            self.current_fps = if self.current_fps == 0.0 {
-                instant_fps
-            } else {
-                0.9 * self.current_fps + 0.1 * instant_fps
-            };
-        }
-        self.last_frame_time = Instant::now();
-    }
-
-    /// Increments state tick counter.
-    pub fn record_tick(&mut self) {
-        self.tick_count += 1;
+    /// Records a render pass and its duration.
+    pub fn record_render(&mut self, duration_ms: f64) {
+        self.draw_calls += 1;
+        self.last_render_time_ms = duration_ms;
     }
 
     /// Updates terminal window dimensions.
@@ -99,21 +80,18 @@ mod tests {
     #[test]
     fn test_engine_metrics_defaults() {
         let metrics = EngineMetrics::default();
-        assert_eq!(metrics.frame_count, 0);
-        assert_eq!(metrics.tick_count, 0);
+        assert_eq!(metrics.draw_calls, 0);
+        assert_eq!(metrics.last_render_time_ms, 0.0);
         assert_eq!(metrics.screen_width, 80);
         assert_eq!(metrics.screen_height, 24);
     }
 
     #[test]
-    fn test_record_frame_and_tick() {
+    fn test_record_render() {
         let mut metrics = EngineMetrics::new();
-        metrics.record_tick();
-        metrics.record_tick();
-        assert_eq!(metrics.tick_count, 2);
-
-        metrics.record_frame();
-        assert_eq!(metrics.frame_count, 1);
+        metrics.record_render(1.5);
+        assert_eq!(metrics.draw_calls, 1);
+        assert_eq!(metrics.last_render_time_ms, 1.5);
     }
 
     #[test]

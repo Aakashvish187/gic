@@ -64,6 +64,7 @@ impl LineNumberRenderer {
         total_lines: usize,
         current_line: usize,
         theme: &Theme,
+        diagnostics: &[gic_core::language_engine::EngineDiagnostic],
     ) {
         if area.width == 0 || area.height == 0 {
             return;
@@ -91,11 +92,48 @@ impl LineNumberRenderer {
 
             let is_current = buffer_row == current_line;
 
-            let number_text = self.format_line_number(buffer_row, current_line, display_width);
-            let style = if is_current {
-                theme.active_line_number_style()
+            // Check if there is a diagnostic for this line
+            let mut line_diag = None;
+            for d in diagnostics {
+                if d.row == buffer_row {
+                    if let Some(existing) = line_diag {
+                        // Keep the most severe
+                        let new_sev = match d.severity {
+                            gic_core::language_engine::EngineSeverity::Error => 3,
+                            gic_core::language_engine::EngineSeverity::Warning => 2,
+                            _ => 1,
+                        };
+                        let old_sev = match existing {
+                            gic_core::language_engine::EngineSeverity::Error => 3,
+                            gic_core::language_engine::EngineSeverity::Warning => 2,
+                            _ => 1,
+                        };
+                        if new_sev > old_sev {
+                            line_diag = Some(d.severity);
+                        }
+                    } else {
+                        line_diag = Some(d.severity);
+                    }
+                }
+            }
+
+            let (number_text, style) = if let Some(sev) = line_diag {
+                let icon = sev.icon();
+                let color = match sev {
+                    gic_core::language_engine::EngineSeverity::Error => theme.diagnostic_error,
+                    gic_core::language_engine::EngineSeverity::Warning => theme.diagnostic_warning,
+                    _ => theme.diagnostic_info,
+                };
+                let padded = format!("{:>width$}", icon, width = display_width);
+                (padded, Style::default().fg(color).bg(theme.gutter_bg))
             } else {
-                theme.line_number_style()
+                let number_text = self.format_line_number(buffer_row, current_line, display_width);
+                let style = if is_current {
+                    theme.active_line_number_style()
+                } else {
+                    theme.line_number_style()
+                };
+                (number_text, style)
             };
 
             // Right-align the number within the gutter (leaving 1 col padding on right)
@@ -211,7 +249,7 @@ mod tests {
         let area = Rect::new(0, 0, 5, 3);
         let mut buf = Buffer::empty(area);
 
-        renderer.render(&mut buf, area, 0, 10, 1, &theme);
+        renderer.render(&mut buf, area, 0, 10, 1, &theme, &[]);
 
         // Verify that the buffer was written to (not empty)
         let content: String = buf
@@ -231,7 +269,7 @@ mod tests {
         let area = Rect::new(0, 0, 5, 10); // 10 rows but only 3 lines
         let mut buf = Buffer::empty(area);
 
-        renderer.render(&mut buf, area, 0, 3, 0, &theme);
+        renderer.render(&mut buf, area, 0, 3, 0, &theme, &[]);
         // Should not crash, lines 4-10 should be empty
     }
 
@@ -242,7 +280,7 @@ mod tests {
         let area = Rect::new(0, 0, 5, 3);
         let mut buf = Buffer::empty(area);
 
-        renderer.render(&mut buf, area, 50, 100, 51, &theme);
+        renderer.render(&mut buf, area, 50, 100, 51, &theme, &[]);
 
         let content: String = buf
             .content()
@@ -270,6 +308,6 @@ mod tests {
         let area = Rect::new(0, 0, 0, 0);
         let mut buf = Buffer::empty(Rect::new(0, 0, 1, 1));
         // Should not crash
-        renderer.render(&mut buf, area, 0, 10, 0, &theme);
+        renderer.render(&mut buf, area, 0, 10, 0, &theme, &[]);
     }
 }

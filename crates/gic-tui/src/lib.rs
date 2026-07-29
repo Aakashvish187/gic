@@ -5,9 +5,7 @@ pub mod event_stream;
 pub mod render_engine;
 pub mod renderer;
 pub mod terminal;
-pub mod widgets;
 
 pub use event_stream::EventStream;
 pub use render_engine::RenderEngine;
 pub use terminal::TerminalEngine;
-pub use widgets::StatusBar;

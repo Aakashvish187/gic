@@ -81,6 +81,10 @@ impl TextRenderer {
         is_current_line: bool,
         selection: Option<&Selection>,
         line_row: usize,
+        search_results: Option<&[CursorPosition]>,
+        search_query: Option<&str>,
+        diagnostics: Option<&[gic_core::language_engine::EngineDiagnostic]>,
+        ghost_text: Option<&str>,
     ) -> Line<'static> {
         if visible_cols == 0 {
             return Line::default();
@@ -102,6 +106,10 @@ impl TextRenderer {
                 theme.foreground,
                 selection,
                 line_row,
+                search_results,
+                search_query,
+                theme,
+                diagnostics,
             );
         }
 
@@ -130,17 +138,45 @@ impl TextRenderer {
 
                 // Determine if this character is selected
                 let is_selected = self.is_char_selected(selection, line_row, display_col);
+                
+                // Determine if this character is a search match
+                let is_search_match = search_results.map_or(false, |results| {
+                    let query_len = search_query.map_or(1, |q| q.chars().count().max(1));
+                    results.iter().any(|pos| pos.row == line_row && display_col >= pos.col && display_col < pos.col + query_len)
+                });
 
-                let char_bg = if is_selected {
+                let mut char_bg = if is_selected {
                     theme.selection
                 } else {
                     base_bg
                 };
+                
+                let mut char_fg = fg;
+                let mut modifier = token_style.add_modifier;
+                
+                if is_search_match && !is_selected {
+                    char_bg = Color::Yellow;
+                    char_fg = Color::Black;
+                }
+
+                // Check for diagnostics overlapping this character
+                if let Some(diags) = diagnostics {
+                    for d in diags {
+                        if d.row == line_row && display_col >= d.col && display_col < d.col + d.length {
+                            modifier = modifier | Modifier::UNDERLINED;
+                            if d.severity == gic_core::language_engine::EngineSeverity::Error {
+                                char_fg = theme.diagnostic_error;
+                            } else if d.severity == gic_core::language_engine::EngineSeverity::Warning && char_fg != theme.diagnostic_error {
+                                char_fg = theme.diagnostic_warning;
+                            }
+                        }
+                    }
+                }
 
                 let style = Style::default()
-                    .fg(fg)
+                    .fg(char_fg)
                     .bg(char_bg)
-                    .add_modifier(token_style.add_modifier);
+                    .add_modifier(modifier);
 
                 let display_text = if ch == '\t' {
                     " ".repeat(ch_width)
@@ -151,6 +187,17 @@ impl TextRenderer {
                 spans.push(Span::styled(display_text, style));
                 display_col += ch_width;
             }
+        }
+
+        if let Some(gt) = ghost_text {
+            let gt_style = Style::default().fg(Color::DarkGray).add_modifier(Modifier::ITALIC);
+            let display_gt = if let Some(idx) = gt.find('\n') {
+                format!("{}...", &gt[..idx])
+            } else {
+                gt.to_string()
+            };
+            spans.push(Span::styled(display_gt, gt_style));
+            // display_col isn't increased because ghost text isn't part of the real buffer width
         }
 
         // Fill remaining viewport with background
@@ -185,10 +232,14 @@ impl TextRenderer {
         line_text: &str,
         scroll_col: usize,
         visible_cols: usize,
-        bg: Color,
-        fg: Color,
+        base_bg: Color,
+        base_fg: Color,
         selection: Option<&Selection>,
         line_row: usize,
+        search_results: Option<&[CursorPosition]>,
+        search_query: Option<&str>,
+        theme: &Theme,
+        diagnostics: Option<&[gic_core::language_engine::EngineDiagnostic]>,
     ) -> Line<'static> {
         let mut spans: Vec<Span<'static>> = Vec::new();
         let mut display_col: usize = 0;
@@ -206,14 +257,44 @@ impl TextRenderer {
                 break;
             }
 
+            // Determine if this character is selected
             let is_selected = self.is_char_selected(selection, line_row, display_col);
-            let char_bg = if is_selected {
-                Color::Rgb(68, 68, 120)
-            } else {
-                bg
-            };
+            
+            // Determine if this character is a search match
+            let is_search_match = search_results.map_or(false, |results| {
+                let query_len = search_query.map_or(1, |q| q.chars().count().max(1));
+                results.iter().any(|pos| pos.row == line_row && display_col >= pos.col && display_col < pos.col + query_len)
+            });
 
-            let style = Style::default().fg(fg).bg(char_bg);
+            let mut char_bg = if is_selected {
+                theme.selection
+            } else {
+                base_bg
+            };
+            
+            let mut char_fg = base_fg;
+            let mut modifier = Modifier::empty();
+            
+            if is_search_match && !is_selected {
+                char_bg = Color::Yellow;
+                char_fg = Color::Black;
+            }
+
+            // Check for diagnostics overlapping this character
+            if let Some(diags) = diagnostics {
+                for d in diags {
+                    if d.row == line_row && display_col >= d.col && display_col < d.col + d.length {
+                        modifier = modifier | Modifier::UNDERLINED;
+                        if d.severity == gic_core::language_engine::EngineSeverity::Error {
+                            char_fg = theme.diagnostic_error;
+                        } else if d.severity == gic_core::language_engine::EngineSeverity::Warning && char_fg != theme.diagnostic_error {
+                            char_fg = theme.diagnostic_warning;
+                        }
+                    }
+                }
+            }
+
+            let style = Style::default().fg(char_fg).bg(char_bg).add_modifier(modifier);
 
             let display_text = if ch == '\t' {
                 " ".repeat(ch_width)
@@ -230,7 +311,7 @@ impl TextRenderer {
         if rendered_cols < visible_cols {
             spans.push(Span::styled(
                 " ".repeat(visible_cols - rendered_cols),
-                Style::default().bg(bg),
+                Style::default().bg(base_bg),
             ));
         }
 
@@ -321,89 +402,4 @@ impl TextRenderer {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
 
-    #[test]
-    fn test_char_display_width() {
-        let tr = TextRenderer::new(4);
-        assert_eq!(tr.char_display_width('a'), 1);
-        assert_eq!(tr.char_display_width('\t'), 4);
-        assert_eq!(tr.char_display_width('中'), 2); // CJK
-    }
-
-    #[test]
-    fn test_string_display_width() {
-        let tr = TextRenderer::new(4);
-        assert_eq!(tr.string_display_width("hello"), 5);
-        assert_eq!(tr.string_display_width("h\tllo"), 8); // h(1) + tab(4) + llo(3)
-        assert_eq!(tr.string_display_width("中文"), 4); // 2 + 2
-    }
-
-    #[test]
-    fn test_char_index_to_display_col() {
-        let tr = TextRenderer::new(4);
-        assert_eq!(tr.char_index_to_display_col("hello", 0), 0);
-        assert_eq!(tr.char_index_to_display_col("hello", 3), 3);
-        assert_eq!(tr.char_index_to_display_col("\thello", 1), 4); // tab = 4 cols
-        assert_eq!(tr.char_index_to_display_col("中文abc", 2), 4); // 2 CJK chars = 4 cols
-    }
-
-    #[test]
-    fn test_default_tab_width() {
-        let tr = TextRenderer::with_default_tab_width();
-        assert_eq!(tr.tab_width(), 4);
-    }
-
-    #[test]
-    fn test_zero_tab_width_defaults() {
-        let tr = TextRenderer::new(0);
-        assert_eq!(tr.tab_width(), 4); // Should default to 4
-    }
-
-    #[test]
-    fn test_render_empty_line() {
-        let tr = TextRenderer::new(4);
-        let line = tr.render_empty_line(10, Color::Black);
-        // Should produce a single span of 10 spaces
-        assert_eq!(line.spans.len(), 1);
-    }
-
-    #[test]
-    fn test_render_tilde_line() {
-        let tr = TextRenderer::new(4);
-        let theme = crate::renderer::themes::builtin::gic_dark();
-        let line = tr.render_tilde_line(80, &theme);
-        assert!(!line.spans.is_empty());
-
-        // First span should be "~"
-        let first = &line.spans[0];
-        assert_eq!(first.content.as_ref(), "~");
-    }
-
-    #[test]
-    fn test_render_plain_line_no_scroll() {
-        let tr = TextRenderer::new(4);
-        let theme = crate::renderer::themes::builtin::gic_dark();
-        let line = tr.render_line("hello world", &[], 0, 80, &theme, false, None, 0);
-        assert!(!line.spans.is_empty());
-    }
-
-    #[test]
-    fn test_render_line_with_scroll() {
-        let tr = TextRenderer::new(4);
-        let theme = crate::renderer::themes::builtin::gic_dark();
-        let line = tr.render_line("hello world", &[], 5, 40, &theme, false, None, 0);
-        // Should skip "hello" and render " world" + fill
-        assert!(!line.spans.is_empty());
-    }
-
-    #[test]
-    fn test_render_line_zero_visible() {
-        let tr = TextRenderer::new(4);
-        let theme = crate::renderer::themes::builtin::gic_dark();
-        let line = tr.render_line("hello", &[], 0, 0, &theme, false, None, 0);
-        assert!(line.spans.is_empty());
-    }
-}

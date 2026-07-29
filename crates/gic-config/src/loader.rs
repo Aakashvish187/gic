@@ -51,15 +51,13 @@ mod tests {
             log_dir = "test_logs"
             log_file = "test.log"
             [ui]
-            tick_rate_ms = 100
-            frame_rate_fps = 30
+            theme = "custom"
         "#;
 
         let config = ConfigLoader::parse_toml(toml_str).expect("Valid TOML should parse");
         assert_eq!(config.app_name, "GIC Test");
         assert_eq!(config.logging.level, "debug");
-        assert_eq!(config.ui.tick_rate_ms, 100);
-        assert_eq!(config.ui.frame_rate_fps, 30);
+        assert_eq!(config.ui.theme, "custom");
     }
 
     #[test]

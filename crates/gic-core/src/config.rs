@@ -39,15 +39,13 @@ impl Default for LogConfig {
 /// Configuration settings for the Terminal UI.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct UIConfig {
-    pub tick_rate_ms: u64,
-    pub frame_rate_fps: u64,
+    pub theme: String,
 }
 
 impl Default for UIConfig {
     fn default() -> Self {
         Self {
-            tick_rate_ms: 250,
-            frame_rate_fps: 60,
+            theme: "default".to_string(),
         }
     }
 }
@@ -63,8 +61,7 @@ mod tests {
         assert_eq!(config.logging.level, "info");
         assert_eq!(config.logging.log_dir, "logs");
         assert_eq!(config.logging.log_file, "gic.log");
-        assert_eq!(config.ui.tick_rate_ms, 250);
-        assert_eq!(config.ui.frame_rate_fps, 60);
+        assert_eq!(config.ui.theme, "default");
     }
 
     #[test]

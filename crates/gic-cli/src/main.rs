@@ -1,19 +1,13 @@
 mod cli;
+mod editor_app;
+mod starter_wizard;
 
 use anyhow::Result;
 use cli::CliOptions;
+use editor_app::EditorApp;
 use gic_config::ConfigLoader;
-use gic_core::{
-    AboutProvider, DefaultAboutProvider, EngineState, InputEvent, KeyCode, MouseAction,
-    ShutdownReason,
-};
+use gic_core::{AboutProvider, DefaultAboutProvider};
 use gic_logging::init_logging;
-use gic_tui::{EventStream, RenderEngine, StatusBar, TerminalEngine};
-use ratatui::{
-    layout::{Alignment, Constraint, Direction, Layout},
-    style::{Color, Modifier, Style},
-    widgets::{Block, Borders, Paragraph},
-};
 use tracing::info;
 
 fn main() -> Result<()> {
@@ -34,8 +28,19 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
+    if options.update {
+        let about_provider = DefaultAboutProvider::new();
+        let info = about_provider.get_about_info();
+        let updater = gic_core::updater::Updater::new(&info.version);
+        if let Err(e) = updater.perform_update() {
+            eprintln!("Update check failed: {}", e);
+        }
+        return Ok(());
+    }
+
     let config_path = options
         .config_path
+        .clone()
         .unwrap_or_else(|| std::path::PathBuf::from("gic.toml"));
 
     // 2. Load Configuration
@@ -43,147 +48,89 @@ fn main() -> Result<()> {
 
     // 3. Initialize Structured Logging
     let _ = init_logging(&config.logging);
-    info!(app_name = %config.app_name, "Starting GIC Terminal Engine");
+    info!(app_name = %config.app_name, "Starting GIC Infrastructure Editor");
 
-    // 4. Initialize Terminal Engine (Full screen, alternate screen, mouse enabled)
-    let mut engine_state = EngineState::new();
-    let mut terminal_engine = TerminalEngine::new(engine_state.mouse_enabled)?;
-    let (w, h) = terminal_engine.size().unwrap_or((80, 24));
-    engine_state.metrics.update_dimensions(w, h);
+    // 4. Project Starter Engine (Wizard)
+    let mut final_file_path = options.file_path;
 
-    let event_stream = EventStream::new(&config.ui);
-    let mut render_engine = RenderEngine::new(&config.ui);
+    let mut should_run_wizard = options.template;
+    let mut detected_project_type = gic_core::starter_engine::models::ProjectType::Generic;
 
-    info!("Terminal Engine initialized. Entering main event & render loop.");
-
-    // 5. Main Terminal Event & FPS-Independent Render Loop
-    let shutdown_reason = loop {
-        // Poll Events
-        let event = event_stream.next_event()?;
-
-        match event {
-            InputEvent::Key(key) => {
-                // Exit Shortcuts: 'q' or 'Ctrl+C'
-                if key.code == KeyCode::Char('q')
-                    || (key.modifiers.control && key.code == KeyCode::Char('c'))
-                {
-                    break ShutdownReason::UserRequested;
-                }
-
-                // Dynamic Mouse Capture Toggle: 'm'
-                if key.code == KeyCode::Char('m') {
-                    let mouse_on = engine_state.toggle_mouse();
-                    if let Err(e) = terminal_engine.set_mouse_capture(mouse_on) {
-                        engine_state.set_status(format!("Mouse Toggle Error: {}", e));
-                    } else {
-                        engine_state.set_status(format!(
-                            "Mouse capture {}",
-                            if mouse_on { "enabled" } else { "disabled" }
-                        ));
-                    }
-                } else {
-                    engine_state.set_status(format!("Key Pressed: {:?}", key.code));
-                }
+    if let Some(path) = &final_file_path {
+        let is_new = !path.exists() || options.new_file;
+        
+        if is_new && !options.template {
+            // Detect intent
+            detected_project_type = gic_core::starter_engine::detector::detect_intent(path);
+            if detected_project_type != gic_core::starter_engine::models::ProjectType::Generic {
+                should_run_wizard = true;
+            } else {
+                // Generic file, just create it empty and skip wizard
+                let _ = std::fs::File::create(path);
             }
-            InputEvent::Mouse(mouse) => {
-                let action_str = match mouse.action {
-                    MouseAction::Press(btn) => format!("Click({:?})", btn),
-                    MouseAction::Release(btn) => format!("Release({:?})", btn),
-                    MouseAction::Drag(btn) => format!("Drag({:?})", btn),
-                    MouseAction::Moved => "Moved".to_string(),
-                    MouseAction::ScrollUp => "ScrollUp".to_string(),
-                    MouseAction::ScrollDown => "ScrollDown".to_string(),
+        } else if options.template {
+            detected_project_type = gic_core::starter_engine::detector::detect_intent(path);
+        }
+    } else {
+        // No file specified, skip wizard (unless we want a master wizard later)
+    }
+
+    if should_run_wizard {
+        info!("Launching Project Starter Wizard for {:?}", detected_project_type);
+        if let Some(config) = starter_wizard::run_wizard(final_file_path.as_deref(), detected_project_type.clone())? {
+            use gic_core::starter_engine::TemplateGenerator;
+            use gic_core::starter_engine::models::ProjectType;
+
+            // Check for manual mode early exit based on typical primary config answers
+            let is_manual = config.get_answer("cloud").map(|v| v.as_str()) == Some("Manual (Empty File)") ||
+                            config.get_answer("stack").map(|v| v.as_str()) == Some("Manual (Empty File)") ||
+                            config.get_answer("language").map(|v| v.as_str()) == Some("Manual (Empty File)") ||
+                            config.get_answer("playbook").map(|v| v.as_str()) == Some("Manual (Empty File)") ||
+                            config.get_answer("workflow").map(|v| v.as_str()) == Some("Manual (Empty File)") ||
+                            config.get_answer("k8s_kind").map(|v| v.as_str()) == Some("Manual (Empty File)");
+
+            if !is_manual {
+                let generated_files = match detected_project_type {
+                    ProjectType::Kubernetes => gic_core::starter_engine::templates::kubernetes::KubernetesStarter.generate(&config),
+                    ProjectType::Terraform => gic_core::starter_engine::templates::terraform::TerraformStarter.generate(&config),
+                    ProjectType::Docker => gic_core::starter_engine::templates::docker::DockerStarter.generate(&config),
+                    ProjectType::DockerCompose => gic_core::starter_engine::templates::docker::DockerComposeStarter.generate(&config),
+                    ProjectType::Ansible => gic_core::starter_engine::templates::ansible::AnsibleStarter.generate(&config),
+                    ProjectType::GithubActions => gic_core::starter_engine::templates::github_actions::GithubActionsStarter.generate(&config),
+                    _ => {
+                        // For any unknown type, generate a blank file
+                        if let Some(path) = &final_file_path {
+                            let filename = path.file_name().unwrap_or_default().to_string_lossy().to_string();
+                            vec![gic_core::starter_engine::models::GeneratedFile {
+                                path: filename,
+                                content: String::new(),
+                            }]
+                        } else {
+                            vec![]
+                        }
+                    }
                 };
-                engine_state.set_status(format!(
-                    "Mouse Event: {} at ({}, {})",
-                    action_str, mouse.column, mouse.row
-                ));
-            }
-            InputEvent::Resize { width, height } => {
-                engine_state.metrics.update_dimensions(width, height);
-                engine_state.set_status(format!("Window Resized to {}x{}", width, height));
-            }
-            InputEvent::Tick => {
-                engine_state.metrics.record_tick();
-            }
-            InputEvent::Paste(ref text) => {
-                engine_state.set_status(format!("Pasted {} characters", text.len()));
+
+                if !generated_files.is_empty() {
+                    let base_dir = std::env::current_dir()?;
+                    gic_core::starter_engine::generator::write_generated_files(generated_files.clone(), &base_dir)?;
+                    
+                    // Override path with the first generated file
+                    final_file_path = Some(base_dir.join(&generated_files[0].path));
+                }
+            } else {
+                // Manual mode selected: create the empty file so the editor doesn't complain, 
+                // but do not generate boilerplate.
+                if let Some(path) = &final_file_path {
+                    let _ = std::fs::File::create(path);
+                }
             }
         }
+    }
 
-        // Render Frame when Frame Budget permits (FPS-independent rendering)
-        if render_engine.should_render() {
-            terminal_engine.terminal_mut().draw(|frame| {
-                let chunks = Layout::default()
-                    .direction(Direction::Vertical)
-                    .constraints([
-                        Constraint::Length(3),
-                        Constraint::Min(5),
-                        Constraint::Length(1),
-                    ])
-                    .split(frame.size());
-
-                // Header Component
-                let header = Paragraph::new("GIC – General Infrastructure Console")
-                    .style(
-                        Style::default()
-                            .fg(Color::Cyan)
-                            .add_modifier(Modifier::BOLD),
-                    )
-                    .alignment(Alignment::Center)
-                    .block(
-                        Block::default()
-                            .borders(Borders::ALL)
-                            .title(" Milestone 2: Terminal Engine "),
-                    );
-                frame.render_widget(header, chunks[0]);
-
-                // Body Canvas Component
-                let body_text = format!(
-                    "Terminal Engine Active\n\n\
-                     • Full Screen & Alternate Screen Buffer: Active\n\
-                     • FPS Target: {} FPS | Frame Count: {}\n\
-                     • Tick Rate Target: {} ms | Tick Count: {}\n\
-                     • Mouse Support: {}\n\n\
-                     Controls:\n\
-                     - Press 'm' to toggle Mouse Capture\n\
-                     - Press 'q' or 'Ctrl+C' to Gracefully Exit\n\
-                     - Click or Scroll anywhere to test Mouse Events",
-                    config.ui.frame_rate_fps,
-                    engine_state.metrics.frame_count,
-                    config.ui.tick_rate_ms,
-                    engine_state.metrics.tick_count,
-                    if engine_state.mouse_enabled {
-                        "ENABLED"
-                    } else {
-                        "DISABLED"
-                    }
-                );
-
-                let body = Paragraph::new(body_text)
-                    .style(Style::default().fg(Color::White))
-                    .alignment(Alignment::Center)
-                    .block(
-                        Block::default()
-                            .borders(Borders::ALL)
-                            .title(" Engine Console "),
-                    );
-                frame.render_widget(body, chunks[1]);
-
-                // Modular Status Bar Component
-                let status_bar = StatusBar::new(&engine_state);
-                frame.render_widget(status_bar, chunks[2]);
-            })?;
-
-            render_engine.record_render(&mut engine_state.metrics);
-        }
-    };
-
-    // 6. Graceful Exit (TerminalEngine drop restores raw mode and alternate screen)
-    info!(reason = %shutdown_reason, "Exiting Terminal Engine cleanly");
-    println!("GIC Engine shut down cleanly: {}", shutdown_reason);
-
-    Ok(())
+    // 5. Launch Interactive Editor Application
+    let app = EditorApp::new(final_file_path, config.ui, options.debug);
+    app.run()
 }
 
 #[cfg(test)]

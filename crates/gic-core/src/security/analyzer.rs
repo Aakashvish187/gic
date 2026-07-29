@@ -4,7 +4,7 @@ use crate::diagnostics::Diagnostic;
 use crate::security::docker::DockerSecurityAdapter;
 use crate::security::findings::SecurityFinding;
 use crate::security::git::GitSecurityAdapter;
-use crate::security::kubernetes::KubernetesSecurityAdapter;
+use crate::security::kubernetes::K8sSecurityAdapter;
 use crate::security::linux::LinuxSecurityAdapter;
 use crate::security::networking::NetworkSecurityAdapter;
 use crate::security::terraform::TerraformSecurityAdapter;
@@ -26,7 +26,7 @@ pub enum EngineDiagnosticSource<'a> {
 #[derive(Debug, Clone, Default)]
 pub struct SecurityAnalyzer {
     docker: DockerSecurityAdapter,
-    kubernetes: KubernetesSecurityAdapter,
+    kubernetes: K8sSecurityAdapter,
     terraform: TerraformSecurityAdapter,
     linux: LinuxSecurityAdapter,
     networking: NetworkSecurityAdapter,
