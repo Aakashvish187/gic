@@ -7,7 +7,7 @@ License:        MIT or Apache-2.0
 URL:            https://github.com/Aakashvish187/gic
 Source0:        %{name}-%{version}.tar.gz
 
-BuildRequires:  gcc cargo
+
 %description
 GIC (Infrastructure-as-Code Editor) is a modern terminal-based editor
 optimized for Kubernetes, Docker, Terraform, Ansible, and GitHub Actions
