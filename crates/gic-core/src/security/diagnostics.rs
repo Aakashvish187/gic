@@ -17,7 +17,10 @@ impl SecurityDiagnostics {
 
     /// Converts all security findings into GIC `Diagnostic` objects for the Problems Panel.
     pub fn to_diagnostics(&self, findings: &[SecurityFinding]) -> Vec<Diagnostic> {
-        findings.iter().map(|f| self.finding_to_diagnostic(f)).collect()
+        findings
+            .iter()
+            .map(|f| self.finding_to_diagnostic(f))
+            .collect()
     }
 
     fn finding_to_diagnostic(&self, finding: &SecurityFinding) -> Diagnostic {

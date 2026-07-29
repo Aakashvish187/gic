@@ -103,8 +103,12 @@ impl<'a> StatusBarRenderer<'a> {
     /// Builds the left-aligned spans of the status bar.
     fn build_left_spans(&self) -> Vec<Span<'static>> {
         let mut spans = Vec::new();
-        let sep_style = Style::default().fg(self.theme.status_bar_secondary).bg(self.theme.status_bar_bg);
-        let info_style = Style::default().fg(self.theme.status_bar_fg).bg(self.theme.status_bar_bg);
+        let sep_style = Style::default()
+            .fg(self.theme.status_bar_secondary)
+            .bg(self.theme.status_bar_bg);
+        let info_style = Style::default()
+            .fg(self.theme.status_bar_fg)
+            .bg(self.theme.status_bar_bg);
 
         // 1. Mode indicator
         let mode_style = self.theme.status_bar_mode_style();
@@ -114,7 +118,11 @@ impl<'a> StatusBarRenderer<'a> {
         spans.push(Span::styled(" │ ", sep_style));
 
         // 2. Language
-        let lang = if self.file_info.language == "Plain Text" { "TXT" } else { &self.file_info.language };
+        let lang = if self.file_info.language == "Plain Text" {
+            "TXT"
+        } else {
+            &self.file_info.language
+        };
         spans.push(Span::styled(lang.to_string(), info_style));
         spans.push(Span::styled(" │ ", sep_style));
 
@@ -132,7 +140,10 @@ impl<'a> StatusBarRenderer<'a> {
         spans.push(Span::styled(" │ ", sep_style));
 
         // 4. Encoding
-        spans.push(Span::styled(self.file_info.encoding.to_string(), info_style));
+        spans.push(Span::styled(
+            self.file_info.encoding.to_string(),
+            info_style,
+        ));
         spans.push(Span::styled(" │ ", sep_style));
 
         // 5. Indentation
@@ -167,18 +178,27 @@ impl<'a> StatusBarRenderer<'a> {
         let warnings = self.warning_count.unwrap_or(0);
 
         if errors == 0 && warnings == 0 {
-            spans.push(Span::styled(" ☸ Valid ", Style::default().fg(Color::Rgb(166, 227, 161)).bg(self.theme.status_bar_bg)));
+            spans.push(Span::styled(
+                " ☸ Valid ",
+                Style::default()
+                    .fg(Color::Rgb(166, 227, 161))
+                    .bg(self.theme.status_bar_bg),
+            ));
         } else {
             if warnings > 0 {
                 spans.push(Span::styled(
                     format!(" ⚠{} ", warnings),
-                    Style::default().fg(self.theme.diagnostic_warning).bg(self.theme.status_bar_bg),
+                    Style::default()
+                        .fg(self.theme.diagnostic_warning)
+                        .bg(self.theme.status_bar_bg),
                 ));
             }
             if errors > 0 {
                 spans.push(Span::styled(
                     format!(" ❌{} ", errors),
-                    Style::default().fg(self.theme.diagnostic_error).bg(self.theme.status_bar_bg),
+                    Style::default()
+                        .fg(self.theme.diagnostic_error)
+                        .bg(self.theme.status_bar_bg),
                 ));
             }
         }
@@ -196,7 +216,9 @@ impl<'a> StatusBarRenderer<'a> {
             spans.push(Span::styled("│ ", secondary_style));
             spans.push(Span::styled(
                 format!("{} ", metrics),
-                Style::default().fg(Color::Yellow).bg(self.theme.status_bar_bg),
+                Style::default()
+                    .fg(Color::Yellow)
+                    .bg(self.theme.status_bar_bg),
             ));
         }
 

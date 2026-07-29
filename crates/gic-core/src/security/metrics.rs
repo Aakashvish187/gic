@@ -43,16 +43,32 @@ impl SecurityMetrics {
         self.cache_misses.fetch_add(1, Ordering::Relaxed);
     }
 
-    pub fn scans(&self) -> u64 { self.scans_performed.load(Ordering::Relaxed) }
-    pub fn secrets(&self) -> u64 { self.secrets_detected.load(Ordering::Relaxed) }
-    pub fn findings(&self) -> u64 { self.findings_generated.load(Ordering::Relaxed) }
-    pub fn reports(&self) -> u64 { self.reports_built.load(Ordering::Relaxed) }
-    pub fn cache_hits(&self) -> u64 { self.cache_hits.load(Ordering::Relaxed) }
-    pub fn cache_misses(&self) -> u64 { self.cache_misses.load(Ordering::Relaxed) }
+    pub fn scans(&self) -> u64 {
+        self.scans_performed.load(Ordering::Relaxed)
+    }
+    pub fn secrets(&self) -> u64 {
+        self.secrets_detected.load(Ordering::Relaxed)
+    }
+    pub fn findings(&self) -> u64 {
+        self.findings_generated.load(Ordering::Relaxed)
+    }
+    pub fn reports(&self) -> u64 {
+        self.reports_built.load(Ordering::Relaxed)
+    }
+    pub fn cache_hits(&self) -> u64 {
+        self.cache_hits.load(Ordering::Relaxed)
+    }
+    pub fn cache_misses(&self) -> u64 {
+        self.cache_misses.load(Ordering::Relaxed)
+    }
 
     pub fn hit_ratio(&self) -> f64 {
         let h = self.cache_hits();
         let t = h + self.cache_misses();
-        if t == 0 { 0.0 } else { h as f64 / t as f64 }
+        if t == 0 {
+            0.0
+        } else {
+            h as f64 / t as f64
+        }
     }
 }

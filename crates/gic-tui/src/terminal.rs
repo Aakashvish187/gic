@@ -1,5 +1,5 @@
 use crossterm::{
-    cursor::{Hide, Show, SetCursorStyle},
+    cursor::{Hide, SetCursorStyle, Show},
     event::{DisableMouseCapture, EnableMouseCapture},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
@@ -90,7 +90,11 @@ impl Drop for TerminalEngine {
         if self.mouse_captured {
             let _ = execute!(self.terminal.backend_mut(), DisableMouseCapture);
         }
-        let _ = execute!(self.terminal.backend_mut(), LeaveAlternateScreen, SetCursorStyle::DefaultUserShape);
+        let _ = execute!(
+            self.terminal.backend_mut(),
+            LeaveAlternateScreen,
+            SetCursorStyle::DefaultUserShape
+        );
         let _ = disable_raw_mode();
     }
 }

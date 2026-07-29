@@ -12,7 +12,6 @@ pub enum ProjectType {
     Generic,
 }
 
-
 #[derive(Debug, Clone, PartialEq)]
 pub enum QuestionType {
     Select(Vec<String>),

@@ -4,12 +4,19 @@ pub struct TerraformStarter;
 
 impl TemplateGenerator for TerraformStarter {
     fn generate(&self, config: &ProjectConfig) -> Vec<GeneratedFile> {
-        let cloud = config.get_answer("cloud").map(|s| s.as_str()).unwrap_or("AWS");
-        let resource = config.get_answer("resource").map(|s| s.as_str()).unwrap_or("EC2");
+        let cloud = config
+            .get_answer("cloud")
+            .map(|s| s.as_str())
+            .unwrap_or("AWS");
+        let resource = config
+            .get_answer("resource")
+            .map(|s| s.as_str())
+            .unwrap_or("EC2");
 
         let content = match cloud {
             "AWS" => match resource {
-                "EC2" => r#"provider "aws" {
+                "EC2" => {
+                    r#"provider "aws" {
   region = "us-east-1"
 }
 
@@ -21,8 +28,10 @@ resource "aws_instance" "app_server" {
     Name = "ExampleAppServerInstance"
   }
 }
-"#,
-                "VPC" => r#"provider "aws" {
+"#
+                }
+                "VPC" => {
+                    r#"provider "aws" {
   region = "us-east-1"
 }
 
@@ -33,8 +42,10 @@ resource "aws_vpc" "main" {
     Name = "main"
   }
 }
-"#,
-                "S3" => r#"provider "aws" {
+"#
+                }
+                "S3" => {
+                    r#"provider "aws" {
   region = "us-east-1"
 }
 
@@ -46,14 +57,18 @@ resource "aws_s3_bucket" "b" {
     Environment = "Dev"
   }
 }
-"#,
-                _ => r#"provider "aws" {
+"#
+                }
+                _ => {
+                    r#"provider "aws" {
   region = "us-east-1"
 }
-"#,
+"#
+                }
             },
             "Azure" => match resource {
-                _ => r#"provider "azurerm" {
+                _ => {
+                    r#"provider "azurerm" {
   features {}
 }
 
@@ -61,15 +76,18 @@ resource "azurerm_resource_group" "example" {
   name     = "example-resources"
   location = "West Europe"
 }
-"#,
+"#
+                }
             },
             "GCP" => match resource {
-                _ => r#"provider "google" {
+                _ => {
+                    r#"provider "google" {
   project = "my-project-id"
   region  = "us-central1"
   zone    = "us-central1-c"
 }
-"#,
+"#
+                }
             },
             _ => "",
         };

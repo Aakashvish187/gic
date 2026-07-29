@@ -20,7 +20,10 @@ impl TerraformSecurityAdapter {
         let mut findings = Vec::new();
 
         for diag in diagnostics {
-            if diag.rule_name.contains("Terraform") || diag.rule_name.starts_with("TF") || diag.rule_name.starts_with("Sec") {
+            if diag.rule_name.contains("Terraform")
+                || diag.rule_name.starts_with("TF")
+                || diag.rule_name.starts_with("Sec")
+            {
                 let severity = match diag.severity {
                     DiagnosticLevel::Security | DiagnosticLevel::Error => SecuritySeverity::High,
                     DiagnosticLevel::Warning => SecuritySeverity::Medium,

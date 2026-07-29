@@ -54,6 +54,9 @@ impl SecurityAnalyzer {
 
     /// Bulk-processes multiple engine sources, returning the unified findings list.
     pub fn analyze_all(&self, sources: Vec<EngineDiagnosticSource<'_>>) -> Vec<SecurityFinding> {
-        sources.into_iter().flat_map(|s| self.analyze_source(s)).collect()
+        sources
+            .into_iter()
+            .flat_map(|s| self.analyze_source(s))
+            .collect()
     }
 }

@@ -17,7 +17,10 @@ pub struct BottomPanelRenderer<'a> {
 
 impl<'a> BottomPanelRenderer<'a> {
     pub fn new(theme: &'a Theme) -> Self {
-        Self { active_tab: 0, theme }
+        Self {
+            active_tab: 0,
+            theme,
+        }
     }
 
     pub fn render(&self, area: Rect, buf: &mut Buffer) {
@@ -25,7 +28,9 @@ impl<'a> BottomPanelRenderer<'a> {
             return;
         }
 
-        let bg = Style::default().fg(self.theme.foreground).bg(self.theme.panel_bg);
+        let bg = Style::default()
+            .fg(self.theme.foreground)
+            .bg(self.theme.panel_bg);
 
         // Fill background
         for y in area.y..area.y + area.height {
@@ -35,9 +40,13 @@ impl<'a> BottomPanelRenderer<'a> {
         }
 
         // Top border
-        let border_style = Style::default().fg(self.theme.panel_border).bg(self.theme.panel_bg);
+        let border_style = Style::default()
+            .fg(self.theme.panel_border)
+            .bg(self.theme.panel_bg);
         for x in area.x..area.x + area.width {
-            buf.get_mut(x, area.y).set_style(border_style).set_symbol("─");
+            buf.get_mut(x, area.y)
+                .set_style(border_style)
+                .set_symbol("─");
         }
 
         // Tab bar
@@ -72,7 +81,9 @@ impl<'a> BottomPanelRenderer<'a> {
             let content_y = area.y + 3;
             let msg = Line::from(Span::styled(
                 " $ Terminal integration coming soon...",
-                Style::default().fg(self.theme.panel_border).bg(self.theme.panel_bg),
+                Style::default()
+                    .fg(self.theme.panel_border)
+                    .bg(self.theme.panel_bg),
             ));
             buf.set_line(area.x, content_y, &msg, area.width);
         }

@@ -58,7 +58,7 @@ fn main() -> Result<()> {
 
     if let Some(path) = &final_file_path {
         let is_new = !path.exists() || options.new_file;
-        
+
         if is_new && !options.template {
             // Detect intent
             detected_project_type = gic_core::starter_engine::detector::detect_intent(path);
@@ -76,31 +76,58 @@ fn main() -> Result<()> {
     }
 
     if should_run_wizard {
-        info!("Launching Project Starter Wizard for {:?}", detected_project_type);
-        if let Some(config) = starter_wizard::run_wizard(final_file_path.as_deref(), detected_project_type.clone())? {
-            use gic_core::starter_engine::TemplateGenerator;
+        info!(
+            "Launching Project Starter Wizard for {:?}",
+            detected_project_type
+        );
+        if let Some(config) =
+            starter_wizard::run_wizard(final_file_path.as_deref(), detected_project_type.clone())?
+        {
             use gic_core::starter_engine::models::ProjectType;
+            use gic_core::starter_engine::TemplateGenerator;
 
             // Check for manual mode early exit based on typical primary config answers
-            let is_manual = config.get_answer("cloud").map(|v| v.as_str()) == Some("Manual (Empty File)") ||
-                            config.get_answer("stack").map(|v| v.as_str()) == Some("Manual (Empty File)") ||
-                            config.get_answer("language").map(|v| v.as_str()) == Some("Manual (Empty File)") ||
-                            config.get_answer("playbook").map(|v| v.as_str()) == Some("Manual (Empty File)") ||
-                            config.get_answer("workflow").map(|v| v.as_str()) == Some("Manual (Empty File)") ||
-                            config.get_answer("k8s_kind").map(|v| v.as_str()) == Some("Manual (Empty File)");
+            let is_manual = config.get_answer("cloud").map(|v| v.as_str())
+                == Some("Manual (Empty File)")
+                || config.get_answer("stack").map(|v| v.as_str()) == Some("Manual (Empty File)")
+                || config.get_answer("language").map(|v| v.as_str()) == Some("Manual (Empty File)")
+                || config.get_answer("playbook").map(|v| v.as_str()) == Some("Manual (Empty File)")
+                || config.get_answer("workflow").map(|v| v.as_str()) == Some("Manual (Empty File)")
+                || config.get_answer("k8s_kind").map(|v| v.as_str()) == Some("Manual (Empty File)");
 
             if !is_manual {
                 let generated_files = match detected_project_type {
-                    ProjectType::Kubernetes => gic_core::starter_engine::templates::kubernetes::KubernetesStarter.generate(&config),
-                    ProjectType::Terraform => gic_core::starter_engine::templates::terraform::TerraformStarter.generate(&config),
-                    ProjectType::Docker => gic_core::starter_engine::templates::docker::DockerStarter.generate(&config),
-                    ProjectType::DockerCompose => gic_core::starter_engine::templates::docker::DockerComposeStarter.generate(&config),
-                    ProjectType::Ansible => gic_core::starter_engine::templates::ansible::AnsibleStarter.generate(&config),
-                    ProjectType::GithubActions => gic_core::starter_engine::templates::github_actions::GithubActionsStarter.generate(&config),
+                    ProjectType::Kubernetes => {
+                        gic_core::starter_engine::templates::kubernetes::KubernetesStarter
+                            .generate(&config)
+                    }
+                    ProjectType::Terraform => {
+                        gic_core::starter_engine::templates::terraform::TerraformStarter
+                            .generate(&config)
+                    }
+                    ProjectType::Docker => {
+                        gic_core::starter_engine::templates::docker::DockerStarter.generate(&config)
+                    }
+                    ProjectType::DockerCompose => {
+                        gic_core::starter_engine::templates::docker::DockerComposeStarter
+                            .generate(&config)
+                    }
+                    ProjectType::Ansible => {
+                        gic_core::starter_engine::templates::ansible::AnsibleStarter
+                            .generate(&config)
+                    }
+                    ProjectType::GithubActions => {
+                        gic_core::starter_engine::templates::github_actions::GithubActionsStarter
+                            .generate(&config)
+                    }
                     _ => {
                         // For any unknown type, generate a blank file
                         if let Some(path) = &final_file_path {
-                            let filename = path.file_name().unwrap_or_default().to_string_lossy().to_string();
+                            let filename = path
+                                .file_name()
+                                .unwrap_or_default()
+                                .to_string_lossy()
+                                .to_string();
                             vec![gic_core::starter_engine::models::GeneratedFile {
                                 path: filename,
                                 content: String::new(),
@@ -113,13 +140,16 @@ fn main() -> Result<()> {
 
                 if !generated_files.is_empty() {
                     let base_dir = std::env::current_dir()?;
-                    gic_core::starter_engine::generator::write_generated_files(generated_files.clone(), &base_dir)?;
-                    
+                    gic_core::starter_engine::generator::write_generated_files(
+                        generated_files.clone(),
+                        &base_dir,
+                    )?;
+
                     // Override path with the first generated file
                     final_file_path = Some(base_dir.join(&generated_files[0].path));
                 }
             } else {
-                // Manual mode selected: create the empty file so the editor doesn't complain, 
+                // Manual mode selected: create the empty file so the editor doesn't complain,
                 // but do not generate boilerplate.
                 if let Some(path) = &final_file_path {
                     let _ = std::fs::File::create(path);

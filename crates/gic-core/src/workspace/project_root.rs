@@ -9,7 +9,13 @@ pub fn detect_project_root(start_path: &Path) -> Option<PathBuf> {
         Some(start_path.to_path_buf())
     };
 
-    let markers = [".git", "Cargo.toml", "package.json", "docker-compose.yml", "Makefile"];
+    let markers = [
+        ".git",
+        "Cargo.toml",
+        "package.json",
+        "docker-compose.yml",
+        "Makefile",
+    ];
 
     while let Some(path) = current {
         for marker in &markers {

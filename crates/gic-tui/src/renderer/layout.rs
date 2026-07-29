@@ -41,7 +41,12 @@ impl LayoutEngine {
         if area.width < 10 || area.height < 5 {
             return EditorLayout {
                 top_bar_area: Rect::new(area.x, area.y, area.width, 1),
-                status_bar_area: Rect::new(area.x, area.y.saturating_add(area.height).saturating_sub(1), area.width, 1),
+                status_bar_area: Rect::new(
+                    area.x,
+                    area.y.saturating_add(area.height).saturating_sub(1),
+                    area.width,
+                    1,
+                ),
                 file_explorer_area: None,
                 intelligence_panel_area: None,
                 bottom_panel_area: None,
@@ -69,7 +74,12 @@ impl LayoutEngine {
         current_area.height = current_area.height.saturating_sub(1);
 
         // 3. Status Bar (bottom 1 row)
-        let status_bar_area = Rect::new(current_area.x, current_area.y + current_area.height - 1, current_area.width, 1);
+        let status_bar_area = Rect::new(
+            current_area.x,
+            current_area.y + current_area.height - 1,
+            current_area.width,
+            1,
+        );
         current_area.height = current_area.height.saturating_sub(1);
 
         // 4. Bottom Panel (above status bar)

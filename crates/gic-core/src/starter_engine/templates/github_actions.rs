@@ -4,10 +4,14 @@ pub struct GithubActionsStarter;
 
 impl TemplateGenerator for GithubActionsStarter {
     fn generate(&self, config: &ProjectConfig) -> Vec<GeneratedFile> {
-        let workflow = config.get_answer("workflow").map(|s| s.as_str()).unwrap_or("CI");
+        let workflow = config
+            .get_answer("workflow")
+            .map(|s| s.as_str())
+            .unwrap_or("CI");
 
         let content = match workflow {
-            "CI" => r#"name: CI
+            "CI" => {
+                r#"name: CI
 
 on:
   push:
@@ -28,8 +32,10 @@ jobs:
         run: |
           echo Add other actions to build,
           echo test, and deploy your project.
-"#,
-            "Docker Build" => r#"name: Docker Build and Push
+"#
+            }
+            "Docker Build" => {
+                r#"name: Docker Build and Push
 
 on:
   push:
@@ -54,8 +60,10 @@ jobs:
           context: .
           push: true
           tags: user/app:latest
-"#,
-            "Terraform" => r#"name: 'Terraform'
+"#
+            }
+            "Terraform" => {
+                r#"name: 'Terraform'
 
 on:
   push:
@@ -86,8 +94,10 @@ jobs:
     - name: Terraform Apply
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
       run: terraform apply -auto-approve -input=false
-"#,
-            "Deploy Kubernetes" => r#"name: Deploy to Kubernetes
+"#
+            }
+            "Deploy Kubernetes" => {
+                r#"name: Deploy to Kubernetes
 
 on:
   push:
@@ -109,8 +119,10 @@ jobs:
 
     - name: Deploy
       run: kubectl apply -f k8s/
-"#,
-            "Release" => r#"name: Create Release
+"#
+            }
+            "Release" => {
+                r#"name: Create Release
 
 on:
   push:
@@ -127,8 +139,10 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           generate_release_notes: true
-"#,
-            _ => r#"name: Blank Workflow
+"#
+            }
+            _ => {
+                r#"name: Blank Workflow
 
 on: [push]
 
@@ -137,7 +151,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo "Hello World"
-"#,
+"#
+            }
         };
 
         vec![GeneratedFile {

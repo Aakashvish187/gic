@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use crate::language_engine::{Completion, CompletionKind, HoverInfo};
+use std::collections::HashMap;
 
 /// Represents the data type of a property.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -30,7 +30,11 @@ pub struct SchemaProperty {
 }
 
 impl SchemaProperty {
-    pub fn new(name: impl Into<String>, description: impl Into<String>, data_type: SchemaDataType) -> Self {
+    pub fn new(
+        name: impl Into<String>,
+        description: impl Into<String>,
+        data_type: SchemaDataType,
+    ) -> Self {
         Self {
             name: name.into(),
             description: description.into(),
@@ -64,7 +68,7 @@ impl SchemaProperty {
         self.example = Some(example.into());
         self
     }
-    
+
     pub fn with_production_recommendation(mut self, rec: impl Into<String>) -> Self {
         self.production_recommendation = Some(rec.into());
         self
@@ -74,7 +78,7 @@ impl SchemaProperty {
         self.security_recommendation = Some(rec.into());
         self
     }
-    
+
     pub fn with_common_mistakes(mut self, mistakes: impl Into<String>) -> Self {
         self.common_mistakes = Some(mistakes.into());
         self
@@ -110,12 +114,23 @@ pub trait LanguageSchema: Send + Sync {
     fn resolve_path(&self, path: &[String], resource_kind: Option<&str>) -> Option<&SchemaNode>;
 
     /// Returns the property definition for a key within a contextual path.
-    fn resolve_property(&self, path: &[String], key: &str, resource_kind: Option<&str>) -> Option<&SchemaProperty> {
-        self.resolve_path(path, resource_kind).and_then(|node| node.properties.get(key))
+    fn resolve_property(
+        &self,
+        path: &[String],
+        key: &str,
+        resource_kind: Option<&str>,
+    ) -> Option<&SchemaProperty> {
+        self.resolve_path(path, resource_kind)
+            .and_then(|node| node.properties.get(key))
     }
 
     /// Provides completions for keys at the given path.
-    fn key_completions(&self, path: &[String], base_indent: usize, resource_kind: Option<&str>) -> Vec<Completion> {
+    fn key_completions(
+        &self,
+        path: &[String],
+        base_indent: usize,
+        resource_kind: Option<&str>,
+    ) -> Vec<Completion> {
         let mut completions = Vec::new();
         if let Some(node) = self.resolve_path(path, resource_kind) {
             for (name, prop) in &node.properties {
@@ -124,18 +139,18 @@ pub trait LanguageSchema: Send + Sync {
                     SchemaDataType::Array(_) => CompletionKind::Property,
                     _ => CompletionKind::Value,
                 };
-                
+
                 // Normal key completion
                 completions.push(
                     Completion::new(name, format!("{}: ", name), kind)
-                        .with_detail(&prop.description)
+                        .with_detail(&prop.description),
                 );
-                
+
                 // Generate child blocks if snippet exists
                 if let Some(snippet) = &prop.snippet {
                     let mut indented_snippet = String::new();
                     let spaces = " ".repeat(base_indent);
-                    
+
                     for (i, line) in snippet.lines().enumerate() {
                         if i == 0 {
                             indented_snippet.push_str(line);
@@ -154,8 +169,9 @@ pub trait LanguageSchema: Send + Sync {
                         Completion::new(
                             format!("{} (Template)", name),
                             indented_snippet,
-                            CompletionKind::Snippet
-                        ).with_detail("Generate full block")
+                            CompletionKind::Snippet,
+                        )
+                        .with_detail("Generate full block"),
                     );
                 }
             }
@@ -163,7 +179,12 @@ pub trait LanguageSchema: Send + Sync {
         completions
     }
 
-    fn value_completions(&self, path: &[String], key: &str, resource_kind: Option<&str>) -> Vec<Completion> {
+    fn value_completions(
+        &self,
+        path: &[String],
+        key: &str,
+        resource_kind: Option<&str>,
+    ) -> Vec<Completion> {
         let mut completions = Vec::new();
         if let Some(prop) = self.resolve_property(path, key, resource_kind) {
             match &prop.data_type {
@@ -171,7 +192,7 @@ pub trait LanguageSchema: Send + Sync {
                     for val in values {
                         completions.push(
                             Completion::new(val.as_str(), val.as_str(), CompletionKind::Value)
-                                .with_detail(&prop.description)
+                                .with_detail(&prop.description),
                         );
                     }
                 }
@@ -186,7 +207,12 @@ pub trait LanguageSchema: Send + Sync {
     }
 
     /// Provides hover documentation for a key at a given path.
-    fn hover_info(&self, path: &[String], key: &str, resource_kind: Option<&str>) -> Option<HoverInfo> {
+    fn hover_info(
+        &self,
+        path: &[String],
+        key: &str,
+        resource_kind: Option<&str>,
+    ) -> Option<HoverInfo> {
         self.resolve_property(path, key, resource_kind).map(|prop| {
             let mut h = HoverInfo::new(&prop.name, &prop.description);
             if let SchemaDataType::Enum(ref values) = prop.data_type {

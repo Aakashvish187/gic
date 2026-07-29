@@ -547,7 +547,7 @@ dependencies = [
 
 [[package]]
 name = "gic-cli"
-version = "1.0.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "crossterm",
@@ -561,7 +561,7 @@ dependencies = [
 
 [[package]]
 name = "gic-config"
-version = "1.0.0"
+version = "0.1.1"
 dependencies = [
  "gic-core",
  "serde",
@@ -570,7 +570,7 @@ dependencies = [
 
 [[package]]
 name = "gic-core"
-version = "1.0.0"
+version = "0.1.1"
 dependencies = [
  "dashmap",
  "git2",
@@ -588,7 +588,7 @@ dependencies = [
 
 [[package]]
 name = "gic-logging"
-version = "1.0.0"
+version = "0.1.1"
 dependencies = [
  "gic-core",
  "tracing",
@@ -597,7 +597,7 @@ dependencies = [
 
 [[package]]
 name = "gic-tui"
-version = "1.0.0"
+version = "0.1.1"
 dependencies = [
  "crossterm",
  "gic-core",

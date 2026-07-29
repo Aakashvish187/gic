@@ -230,7 +230,9 @@ impl TerraformValidator {
         }
 
         // 7. Reference resolution
-        let symbol_table = self.reference_resolver.build_symbol_table(std::slice::from_ref(ast));
+        let symbol_table = self
+            .reference_resolver
+            .build_symbol_table(std::slice::from_ref(ast));
         for (unresolved_ref, span) in self
             .reference_resolver
             .find_unresolved_references(ast, &symbol_table)

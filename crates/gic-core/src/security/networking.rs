@@ -20,7 +20,10 @@ impl NetworkSecurityAdapter {
         let mut findings = Vec::new();
 
         for diag in diagnostics {
-            if diag.rule_name.starts_with("NET") || diag.rule_name.contains("Port") || diag.rule_name.contains("CIDR") {
+            if diag.rule_name.starts_with("NET")
+                || diag.rule_name.contains("Port")
+                || diag.rule_name.contains("CIDR")
+            {
                 let severity = match diag.severity {
                     DiagnosticLevel::Security | DiagnosticLevel::Error => SecuritySeverity::High,
                     DiagnosticLevel::Warning => SecuritySeverity::Medium,

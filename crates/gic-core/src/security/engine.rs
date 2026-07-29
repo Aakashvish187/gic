@@ -52,16 +52,22 @@ impl SecurityEngine {
     /// Scans a file's content for secrets, credentials, and certificates.
     ///
     /// Returns cached results if the path was scanned previously without changes.
-    pub fn scan_file_content<P: AsRef<Path>>(&self, path: P, content: &str) -> Vec<crate::security::findings::SecurityFinding> {
+    pub fn scan_file_content<P: AsRef<Path>>(
+        &self,
+        path: P,
+        content: &str,
+    ) -> Vec<crate::security::findings::SecurityFinding> {
         let path = path.as_ref().to_path_buf();
-        self.logger.log_scan_started(path.to_str().unwrap_or("unknown"));
+        self.logger
+            .log_scan_started(path.to_str().unwrap_or("unknown"));
         self.metrics.inc_scans();
 
         let findings = self.scanner.scan_content(Some(&path), content);
         let count = findings.len();
         self.metrics.inc_findings(count as u64);
         self.cache.put_file_findings(path.clone(), findings.clone());
-        self.logger.log_scan_complete(path.to_str().unwrap_or("unknown"), count);
+        self.logger
+            .log_scan_complete(path.to_str().unwrap_or("unknown"), count);
         findings
     }
 
@@ -77,11 +83,15 @@ impl SecurityEngine {
     }
 
     /// Builds a complete `SecurityReport` from the supplied findings.
-    pub fn build_report(&self, findings: Vec<crate::security::findings::SecurityFinding>) -> SecurityReport {
+    pub fn build_report(
+        &self,
+        findings: Vec<crate::security::findings::SecurityFinding>,
+    ) -> SecurityReport {
         let count = findings.len();
         let report = self.reporter.build_report(findings);
         self.metrics.inc_reports();
-        self.logger.log_report_built(report.risk_score.value(), count);
+        self.logger
+            .log_report_built(report.risk_score.value(), count);
         report
     }
 
@@ -91,7 +101,10 @@ impl SecurityEngine {
     }
 
     /// Converts security findings into GIC `Diagnostic` objects for editor integration.
-    pub fn to_gic_diagnostics(&self, findings: &[crate::security::findings::SecurityFinding]) -> Vec<Diagnostic> {
+    pub fn to_gic_diagnostics(
+        &self,
+        findings: &[crate::security::findings::SecurityFinding],
+    ) -> Vec<Diagnostic> {
         self.diagnostics.to_diagnostics(findings)
     }
 

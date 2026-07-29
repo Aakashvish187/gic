@@ -119,19 +119,18 @@ impl DockerSecurityAnalyzer {
                 InstructionKind::Arg {
                     ref name,
                     default_value: Some(ref v),
+                } if (is_potential_secret_key(name) || is_potential_secret_value(v)) => {
+                    findings.push(DockerSecurityFinding {
+                        rule_id: "sec-docker-secret-in-arg".to_string(),
+                        message: format!("Potential default secret value in ARG '{name}'"),
+                        severity: DockerSecuritySeverity::Critical,
+                        line: inst.line,
+                        span: inst.span,
+                        fix_suggestion: Some(
+                            "Do not embed hardcoded secrets in Dockerfile ARG".to_string(),
+                        ),
+                    });
                 }
-                    if (is_potential_secret_key(name) || is_potential_secret_value(v)) => {
-                        findings.push(DockerSecurityFinding {
-                            rule_id: "sec-docker-secret-in-arg".to_string(),
-                            message: format!("Potential default secret value in ARG '{name}'"),
-                            severity: DockerSecuritySeverity::Critical,
-                            line: inst.line,
-                            span: inst.span,
-                            fix_suggestion: Some(
-                                "Do not embed hardcoded secrets in Dockerfile ARG".to_string(),
-                            ),
-                        });
-                    }
                 _ => {}
             }
         }

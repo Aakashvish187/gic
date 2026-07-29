@@ -49,7 +49,8 @@ impl EnvironmentAnalyzer {
                 let pos_end = Position::new(line_num, line.len().max(1), 0);
                 diagnostics.push(EnvironmentDiagnostic {
                     rule_id: "lin-env-syntax".to_string(),
-                    message: "Invalid environment variable assignment syntax: missing '='".to_string(),
+                    message: "Invalid environment variable assignment syntax: missing '='"
+                        .to_string(),
                     span: Span::new(pos_start, pos_end),
                     is_error: true,
                 });

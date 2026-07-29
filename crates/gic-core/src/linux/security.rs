@@ -47,21 +47,20 @@ impl SecurityAnalyzer {
             }
 
             // Check curl | bash
-            if (cmd.command_name == "curl" || cmd.command_name == "wget")
-                && cmd.is_piped {
-                    let piped_to_bash = cmd.pipeline_commands.iter().any(|pipe_cmd| {
-                        let trimmed = pipe_cmd.trim();
-                        trimmed.starts_with("bash") || trimmed.starts_with("sh")
-                    });
-                    if piped_to_bash {
-                        diagnostics.push(SecurityDiagnostic {
+            if (cmd.command_name == "curl" || cmd.command_name == "wget") && cmd.is_piped {
+                let piped_to_bash = cmd.pipeline_commands.iter().any(|pipe_cmd| {
+                    let trimmed = pipe_cmd.trim();
+                    trimmed.starts_with("bash") || trimmed.starts_with("sh")
+                });
+                if piped_to_bash {
+                    diagnostics.push(SecurityDiagnostic {
                             rule_id: "sec-bash-curl-pipe-bash".to_string(),
                             message: "Dangerous execution: downloading and immediately executing a script via pipe".to_string(),
                             span: cmd.span,
                             is_error: true,
                         });
-                    }
                 }
+            }
         }
 
         Ok(diagnostics)

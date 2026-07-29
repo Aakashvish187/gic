@@ -1,12 +1,12 @@
+use crate::renderer::themes::Theme;
+use gic_core::language_engine::Completion;
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
-    style::{Color, Style, Modifier},
+    style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Clear, List, ListItem, Widget},
 };
-use gic_core::language_engine::Completion;
-use crate::renderer::themes::Theme;
 
 pub struct AutocompletePopup<'a> {
     completions: &'a [Completion],
@@ -59,48 +59,54 @@ impl<'a> AutocompletePopup<'a> {
         }
 
         let popup_area = Rect::new(col, row, width, height);
-        
+
         Clear.render(popup_area, buf);
-        
+
         let block = Block::default()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(Color::DarkGray))
             .style(Style::default().bg(self.theme.background));
-            
+
         let inner_area = block.inner(popup_area);
         block.render(popup_area, buf);
-        
-        let visible_items = self.completions.iter().skip(self.scroll_offset).take(inner_area.height as usize);
-        
+
+        let visible_items = self
+            .completions
+            .iter()
+            .skip(self.scroll_offset)
+            .take(inner_area.height as usize);
+
         let mut items = Vec::new();
         for (i, comp) in visible_items.enumerate() {
             let actual_idx = i + self.scroll_offset;
             let is_selected = actual_idx == self.selected_index;
-            
+
             let icon_str = comp.kind.icon();
-            
+
             let mut style = Style::default().fg(self.theme.foreground);
             if is_selected {
                 style = style.bg(self.theme.selection).add_modifier(Modifier::BOLD);
             }
-            
-            let icon_style = Style::default().fg(self.theme.syntax.keyword).add_modifier(Modifier::BOLD);
-            
+
+            let icon_style = Style::default()
+                .fg(self.theme.syntax.keyword)
+                .add_modifier(Modifier::BOLD);
+
             let label_span = Span::styled(comp.label.clone(), style);
             let detail_span = Span::styled(
                 format!(" {}", comp.detail.as_deref().unwrap_or("")),
-                Style::default().fg(self.theme.syntax.comment)
+                Style::default().fg(self.theme.syntax.comment),
             );
-            
+
             let line = Line::from(vec![
                 Span::styled(format!(" {} ", icon_str), icon_style),
                 label_span,
                 detail_span,
             ]);
-            
+
             items.push(ListItem::new(line).style(style));
         }
-        
+
         let list = List::new(items);
         list.render(inner_area, buf);
     }

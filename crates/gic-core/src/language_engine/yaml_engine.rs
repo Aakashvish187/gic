@@ -3,10 +3,12 @@
 //! Provides diagnostics, completions, and hover documentation for
 //! YAML files, with enhanced support for Kubernetes manifests.
 
-use super::{Completion, CompletionKind, EngineDiagnostic, EngineQuickFix, HoverInfo, LanguageEngine};
 use super::context::ContextResolver;
-use super::schema::LanguageSchema;
 use super::kubernetes_schema::KubernetesSchema;
+use super::schema::LanguageSchema;
+use super::{
+    Completion, CompletionKind, EngineDiagnostic, EngineQuickFix, HoverInfo, LanguageEngine,
+};
 
 pub struct YamlEngine {
     k8s_schema: KubernetesSchema,
@@ -33,12 +35,17 @@ impl YamlEngine {
             if line.contains('\t') {
                 let col = line.find('\t').unwrap_or(0);
                 diagnostics.push(
-                    EngineDiagnostic::error(row, col, "Tab character not allowed in YAML indentation", "yaml")
-                        .with_code("YAML001")
-                        .with_fix(EngineQuickFix::new(
-                            "Replace tab with spaces",
-                            row, col, 1, "  ",
-                        ).preferred())
+                    EngineDiagnostic::error(
+                        row,
+                        col,
+                        "Tab character not allowed in YAML indentation",
+                        "yaml",
+                    )
+                    .with_code("YAML001")
+                    .with_fix(
+                        EngineQuickFix::new("Replace tab with spaces", row, col, 1, "  ")
+                            .preferred(),
+                    ),
                 );
             }
 
@@ -59,12 +66,23 @@ impl YamlEngine {
                         {
                             let abs_col = line.find(':').unwrap_or(0);
                             diagnostics.push(
-                                EngineDiagnostic::error(row, abs_col + 1, "Missing space after ':'", "yaml")
-                                    .with_code("YAML003")
-                                    .with_fix(EngineQuickFix::new(
+                                EngineDiagnostic::error(
+                                    row,
+                                    abs_col + 1,
+                                    "Missing space after ':'",
+                                    "yaml",
+                                )
+                                .with_code("YAML003")
+                                .with_fix(
+                                    EngineQuickFix::new(
                                         "Add space after ':'",
-                                        row, abs_col + 1, 0, " ",
-                                    ).preferred())
+                                        row,
+                                        abs_col + 1,
+                                        0,
+                                        " ",
+                                    )
+                                    .preferred(),
+                                ),
                             );
                         }
                     }
@@ -78,8 +96,13 @@ impl YamlEngine {
             let indent = line.len() - line.trim_start().len();
             if indent > 0 && indent % 2 != 0 {
                 diagnostics.push(
-                    EngineDiagnostic::warning(row, 0, "Odd indentation (expected multiple of 2)", "yaml")
-                        .with_code("YAML004")
+                    EngineDiagnostic::warning(
+                        row,
+                        0,
+                        "Odd indentation (expected multiple of 2)",
+                        "yaml",
+                    )
+                    .with_code("YAML004"),
                 );
             }
         }
@@ -109,19 +132,40 @@ impl YamlEngine {
 
                 // Validate known kinds
                 let known_kinds = [
-                    "Deployment", "Service", "Pod", "ConfigMap", "Secret",
-                    "Ingress", "DaemonSet", "StatefulSet", "CronJob", "Job",
-                    "Namespace", "ServiceAccount", "ClusterRole", "ClusterRoleBinding",
-                    "Role", "RoleBinding", "PersistentVolume", "PersistentVolumeClaim",
-                    "HorizontalPodAutoscaler", "NetworkPolicy", "ResourceQuota",
-                    "LimitRange", "ReplicaSet",
+                    "Deployment",
+                    "Service",
+                    "Pod",
+                    "ConfigMap",
+                    "Secret",
+                    "Ingress",
+                    "DaemonSet",
+                    "StatefulSet",
+                    "CronJob",
+                    "Job",
+                    "Namespace",
+                    "ServiceAccount",
+                    "ClusterRole",
+                    "ClusterRoleBinding",
+                    "Role",
+                    "RoleBinding",
+                    "PersistentVolume",
+                    "PersistentVolumeClaim",
+                    "HorizontalPodAutoscaler",
+                    "NetworkPolicy",
+                    "ResourceQuota",
+                    "LimitRange",
+                    "ReplicaSet",
                 ];
                 if !kind_value.is_empty() && !known_kinds.contains(&kind_value.as_str()) {
                     diagnostics.push(
-                        EngineDiagnostic::warning(row, trimmed.find(&kind_value).unwrap_or(5), 
-                            format!("Unknown Kubernetes resource kind: '{}'", kind_value), "kubernetes")
-                            .with_code("K8S002")
-                            .with_length(kind_value.len())
+                        EngineDiagnostic::warning(
+                            row,
+                            trimmed.find(&kind_value).unwrap_or(5),
+                            format!("Unknown Kubernetes resource kind: '{}'", kind_value),
+                            "kubernetes",
+                        )
+                        .with_code("K8S002")
+                        .with_length(kind_value.len()),
                     );
                 }
             } else if trimmed.starts_with("kind ") && !trimmed.contains(':') {
@@ -129,10 +173,10 @@ impl YamlEngine {
                 diagnostics.push(
                     EngineDiagnostic::error(row, col + 4, "Missing ':' after 'kind'", "kubernetes")
                         .with_code("K8S006")
-                        .with_fix(EngineQuickFix::new("Add ':'", row, col + 4, 0, ":").preferred())
+                        .with_fix(EngineQuickFix::new("Add ':'", row, col + 4, 0, ":").preferred()),
                 );
             }
-            
+
             if trimmed.starts_with("metadata:") {
                 has_metadata = true;
             }
@@ -143,7 +187,7 @@ impl YamlEngine {
                 diagnostics.push(
                     EngineDiagnostic::error(row, col + 4, "Missing ':' after 'name'", "kubernetes")
                         .with_code("K8S007")
-                        .with_fix(EngineQuickFix::new("Add ':'", row, col + 4, 0, ":").preferred())
+                        .with_fix(EngineQuickFix::new("Add ':'", row, col + 4, 0, ":").preferred()),
                 );
             }
 
@@ -151,7 +195,11 @@ impl YamlEngine {
             if trimmed.starts_with("image:") || trimmed.starts_with("- image:") {
                 let image_val = trimmed.split(':').skip(1).collect::<Vec<_>>().join(":");
                 let image_val = image_val.trim().trim_matches('"').trim_matches('\'');
-                if image_val.ends_with(":latest") || (!image_val.contains(':') && !image_val.is_empty() && !image_val.starts_with('#')) {
+                if image_val.ends_with(":latest")
+                    || (!image_val.contains(':')
+                        && !image_val.is_empty()
+                        && !image_val.starts_with('#'))
+                {
                     let col = line.find(image_val).unwrap_or(0);
                     diagnostics.push(
                         EngineDiagnostic::warning(row, col,
@@ -168,11 +216,11 @@ impl YamlEngine {
                 let base_indent = line.len() - line.trim_start().len();
                 let insert_indent = base_indent + 4;
                 let indent_str = " ".repeat(insert_indent);
-                
+
                 let mut found_resources = false;
                 let mut found_liveness = false;
                 let mut found_readiness = false;
-                
+
                 for j in (row + 1)..lines.len().min(row + 30) {
                     let next_line = lines[j];
                     let next = next_line.trim();
@@ -186,14 +234,16 @@ impl YamlEngine {
                         found_readiness = true;
                     }
                     let next_indent = next_line.len() - next_line.trim_start().len();
-                    if !next.is_empty() && !next.starts_with('-') && !next.starts_with('#')
+                    if !next.is_empty()
+                        && !next.starts_with('-')
+                        && !next.starts_with('#')
                         && next_indent <= base_indent
                         && j > row + 1
                     {
                         break;
                     }
                 }
-                
+
                 if !found_resources {
                     let snippet = format!("\n{}resources:\n{}  requests:\n{}    cpu: \"100m\"\n{}    memory: \"128Mi\"\n{}  limits:\n{}    cpu: \"500m\"\n{}    memory: \"512Mi\"", 
                         indent_str, indent_str, indent_str, indent_str, indent_str, indent_str, indent_str);
@@ -205,28 +255,46 @@ impl YamlEngine {
                             .with_fix(EngineQuickFix::new("Add resource limits", row, line.len(), 0, snippet).preferred())
                     );
                 }
-                
+
                 if !found_liveness {
                     let snippet = format!("\n{}livenessProbe:\n{}  httpGet:\n{}    path: █\n{}    port: █\n{}  initialDelaySeconds: 30\n{}  periodSeconds: 10\n{}  timeoutSeconds: 1\n{}  successThreshold: 1\n{}  failureThreshold: 3", 
                         indent_str, indent_str, indent_str, indent_str, indent_str, indent_str, indent_str, indent_str, indent_str);
                     diagnostics.push(
-                        EngineDiagnostic::hint(row, 0,
+                        EngineDiagnostic::hint(
+                            row,
+                            0,
                             "Container spec missing 'livenessProbe'.",
-                            "kubernetes")
-                            .with_code("K8S008")
-                            .with_fix(EngineQuickFix::new("Add livenessProbe", row, line.len(), 0, snippet))
+                            "kubernetes",
+                        )
+                        .with_code("K8S008")
+                        .with_fix(EngineQuickFix::new(
+                            "Add livenessProbe",
+                            row,
+                            line.len(),
+                            0,
+                            snippet,
+                        )),
                     );
                 }
-                
+
                 if !found_readiness {
                     let snippet = format!("\n{}readinessProbe:\n{}  httpGet:\n{}    path: █\n{}    port: █\n{}  initialDelaySeconds: 5\n{}  periodSeconds: 5\n{}  timeoutSeconds: 1\n{}  successThreshold: 1\n{}  failureThreshold: 3", 
                         indent_str, indent_str, indent_str, indent_str, indent_str, indent_str, indent_str, indent_str, indent_str);
                     diagnostics.push(
-                        EngineDiagnostic::hint(row, 0,
+                        EngineDiagnostic::hint(
+                            row,
+                            0,
                             "Container spec missing 'readinessProbe'.",
-                            "kubernetes")
-                            .with_code("K8S009")
-                            .with_fix(EngineQuickFix::new("Add readinessProbe", row, line.len(), 0, snippet))
+                            "kubernetes",
+                        )
+                        .with_code("K8S009")
+                        .with_fix(EngineQuickFix::new(
+                            "Add readinessProbe",
+                            row,
+                            line.len(),
+                            0,
+                            snippet,
+                        )),
                     );
                 }
             }
@@ -236,19 +304,23 @@ impl YamlEngine {
                 let val = trimmed.trim_start_matches("replicas:").trim();
                 if !val.is_empty() && val.parse::<u32>().is_err() {
                     let col = line.find(val).unwrap_or(0);
-                    let mut diag = EngineDiagnostic::error(row, col,
-                            format!("'replicas' expects an integer, got '{}'", val),
-                            "kubernetes")
-                            .with_code("K8S005")
-                            .with_length(val.len());
-                            
+                    let mut diag = EngineDiagnostic::error(
+                        row,
+                        col,
+                        format!("'replicas' expects an integer, got '{}'", val),
+                        "kubernetes",
+                    )
+                    .with_code("K8S005")
+                    .with_length(val.len());
+
                     let unquoted = val.trim_matches('"').trim_matches('\'');
                     if unquoted.parse::<u32>().is_ok() {
-                        diag = diag.with_fix(EngineQuickFix::new(
-                            "Unquote integer", row, col, val.len(), unquoted
-                        ).preferred());
+                        diag = diag.with_fix(
+                            EngineQuickFix::new("Unquote integer", row, col, val.len(), unquoted)
+                                .preferred(),
+                        );
                     }
-                    
+
                     diagnostics.push(diag);
                 }
             }
@@ -258,19 +330,19 @@ impl YamlEngine {
         if !has_api_version {
             diagnostics.push(
                 EngineDiagnostic::error(0, 0, "Missing required field 'apiVersion'", "kubernetes")
-                    .with_code("K8S001")
+                    .with_code("K8S001"),
             );
         }
         if !has_kind {
             diagnostics.push(
                 EngineDiagnostic::error(0, 0, "Missing required field 'kind'", "kubernetes")
-                    .with_code("K8S001")
+                    .with_code("K8S001"),
             );
         }
         if !has_metadata {
             diagnostics.push(
                 EngineDiagnostic::warning(0, 0, "Missing 'metadata' section", "kubernetes")
-                    .with_code("K8S001")
+                    .with_code("K8S001"),
             );
         }
 
@@ -280,24 +352,39 @@ impl YamlEngine {
     fn kubernetes_completions(&self, content: &str, row: usize, col: usize) -> Vec<Completion> {
         let lines: Vec<&str> = content.lines().collect();
         let current_line = lines.get(row).map(|l| l.trim_start()).unwrap_or("");
-        let indent = lines.get(row).map(|l| l.len() - l.trim_start().len()).unwrap_or(0);
-        
+        let indent = lines
+            .get(row)
+            .map(|l| l.len() - l.trim_start().len())
+            .unwrap_or(0);
+
         let ctx = ContextResolver::resolve_yaml(content, row, col, "kubernetes");
         let mut completions = Vec::new();
 
         // Top-level completions (indent 0)
         if ctx.path.is_empty() && !current_line.contains(':') {
             if current_line.is_empty() || current_line.starts_with('k') {
-                completions.push(Completion::new("kind", "kind: ", CompletionKind::Property).with_detail("Resource kind"));
+                completions.push(
+                    Completion::new("kind", "kind: ", CompletionKind::Property)
+                        .with_detail("Resource kind"),
+                );
             }
             if current_line.is_empty() || current_line.starts_with('a') {
-                completions.push(Completion::new("apiVersion", "apiVersion: ", CompletionKind::Property).with_detail("API version"));
+                completions.push(
+                    Completion::new("apiVersion", "apiVersion: ", CompletionKind::Property)
+                        .with_detail("API version"),
+                );
             }
             if current_line.is_empty() || current_line.starts_with('m') {
-                completions.push(Completion::new("metadata", "metadata:\n  name: ", CompletionKind::Snippet).with_detail("Metadata section"));
+                completions.push(
+                    Completion::new("metadata", "metadata:\n  name: ", CompletionKind::Snippet)
+                        .with_detail("Metadata section"),
+                );
             }
             if current_line.is_empty() || current_line.starts_with('s') {
-                completions.push(Completion::new("spec", "spec:\n  ", CompletionKind::Snippet).with_detail("Spec section"));
+                completions.push(
+                    Completion::new("spec", "spec:\n  ", CompletionKind::Snippet)
+                        .with_detail("Spec section"),
+                );
             }
         }
 
@@ -306,7 +393,7 @@ impl YamlEngine {
             let parts: Vec<&str> = current_line.splitn(2, ':').collect();
             let key = parts[0].trim();
             let needs_space = current_line.ends_with(':');
-            
+
             if key == "kind" {
                 let kinds = [
                     ("Deployment", "Manages ReplicaSets and Pods"),
@@ -317,8 +404,14 @@ impl YamlEngine {
                     ("Ingress", "HTTP/HTTPS routing rules"),
                 ];
                 for (kind, detail) in &kinds {
-                    let insert = if needs_space { format!(" {}", kind) } else { kind.to_string() };
-                    completions.push(Completion::new(*kind, insert, CompletionKind::Type).with_detail(*detail));
+                    let insert = if needs_space {
+                        format!(" {}", kind)
+                    } else {
+                        kind.to_string()
+                    };
+                    completions.push(
+                        Completion::new(*kind, insert, CompletionKind::Type).with_detail(*detail),
+                    );
                 }
             } else if key == "apiVersion" {
                 let versions = [
@@ -326,12 +419,20 @@ impl YamlEngine {
                     ("v1", "Core resources"),
                 ];
                 for (ver, detail) in &versions {
-                    let insert = if needs_space { format!(" {}", ver) } else { ver.to_string() };
-                    completions.push(Completion::new(*ver, insert, CompletionKind::Value).with_detail(*detail));
+                    let insert = if needs_space {
+                        format!(" {}", ver)
+                    } else {
+                        ver.to_string()
+                    };
+                    completions.push(
+                        Completion::new(*ver, insert, CompletionKind::Value).with_detail(*detail),
+                    );
                 }
             } else {
                 // Fetch value completions from schema based on context!
-                let mut schema_comps = self.k8s_schema.value_completions(&ctx.path, key, ctx.resource_kind.as_deref());
+                let mut schema_comps =
+                    self.k8s_schema
+                        .value_completions(&ctx.path, key, ctx.resource_kind.as_deref());
                 if needs_space {
                     for comp in &mut schema_comps {
                         comp.insert_text = format!(" {}", comp.insert_text);
@@ -341,7 +442,11 @@ impl YamlEngine {
             }
         } else {
             // Fetch key completions from schema based on context!
-            completions.extend(self.k8s_schema.key_completions(&ctx.path, indent, ctx.resource_kind.as_deref()));
+            completions.extend(self.k8s_schema.key_completions(
+                &ctx.path,
+                indent,
+                ctx.resource_kind.as_deref(),
+            ));
         }
 
         completions
@@ -389,8 +494,12 @@ impl YamlEngine {
 }
 
 impl LanguageEngine for YamlEngine {
-    fn name(&self) -> &'static str { "YAML / Kubernetes" }
-    fn id(&self) -> &'static str { "yaml" }
+    fn name(&self) -> &'static str {
+        "YAML / Kubernetes"
+    }
+    fn id(&self) -> &'static str {
+        "yaml"
+    }
 
     fn diagnostics(&self, content: &str) -> Vec<EngineDiagnostic> {
         let mut diags = self.check_yaml_syntax(content);
@@ -422,7 +531,7 @@ impl LanguageEngine for YamlEngine {
         for line in content.lines() {
             // 1. Replace tabs with 2 spaces
             let mut line = line.replace("\t", "  ");
-            
+
             // 2. Remove trailing whitespace
             line = line.trim_end().to_string();
 
@@ -434,7 +543,10 @@ impl LanguageEngine for YamlEngine {
                     if next_char != ' ' && next_char != '\n' && next_char != '\r' {
                         let prefix = &line[..colon_idx];
                         // If prefix has no spaces inside, it's likely a key
-                        if !prefix.trim().contains(' ') && !prefix.contains('"') && !prefix.contains('\'') {
+                        if !prefix.trim().contains(' ')
+                            && !prefix.contains('"')
+                            && !prefix.contains('\'')
+                        {
                             line.insert(colon_idx + 1, ' ');
                         }
                     }
@@ -444,7 +556,7 @@ impl LanguageEngine for YamlEngine {
             formatted.push_str(&line);
             formatted.push('\n');
         }
-        
+
         // Remove trailing newline if original didn't have it (or just leave it, most formatters ensure trailing newline)
         if !content.ends_with('\n') && formatted.ends_with('\n') {
             formatted.pop();

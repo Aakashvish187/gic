@@ -136,10 +136,14 @@ fn extract_referenced_addresses(val: &str) -> Vec<String> {
     }) {
         let clean = token.trim_start_matches("${").trim_end_matches('}');
         let parts: Vec<&str> = clean.split('.').collect();
-        if parts.len() >= 2 && !parts[0].contains(' ') && !parts[1].contains(' ')
-            && is_valid_identifier(parts[0]) && is_valid_identifier(parts[1]) {
-                addrs.push(format!("{}.{}", parts[0], parts[1]));
-            }
+        if parts.len() >= 2
+            && !parts[0].contains(' ')
+            && !parts[1].contains(' ')
+            && is_valid_identifier(parts[0])
+            && is_valid_identifier(parts[1])
+        {
+            addrs.push(format!("{}.{}", parts[0], parts[1]));
+        }
     }
     addrs
 }

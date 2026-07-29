@@ -1,8 +1,8 @@
 //! # Render State
-use gic_core::EditorState;
-use gic_core::language_engine::{EngineDiagnostic, HoverInfo};
 use crate::renderer::file_explorer::FileTreeEntry;
 use crate::renderer::themes::Theme;
+use gic_core::language_engine::{EngineDiagnostic, HoverInfo};
+use gic_core::EditorState;
 
 pub struct RenderState<'a> {
     pub editor: &'a EditorState,

@@ -266,15 +266,16 @@ impl DockerValidator {
                                     && !named_vol.starts_with('/')
                                     && !named_vol.starts_with('~')
                                     && !named_vol.is_empty()
-                                    && !doc.volumes.contains_key(named_vol) {
-                                        diagnostics.push(DockerDiagnostic {
+                                    && !doc.volumes.contains_key(named_vol)
+                                {
+                                    diagnostics.push(DockerDiagnostic {
                                             rule_id: "rel-compose-dangling-volume".to_string(),
                                             message: format!("Service '{svc_name}' references undefined top-level volume '{named_vol}'"),
                                             severity: DockerSeverity::Error,
                                             span,
                                             quick_fix: None,
                                         });
-                                    }
+                                }
                             }
                         }
                         _ => {}

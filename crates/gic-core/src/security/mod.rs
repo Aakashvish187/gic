@@ -49,10 +49,10 @@ pub mod yaml;
 mod tests;
 
 // ── Public re-exports ──────────────────────────────────────────────────────────
+pub use category::SecurityCategory;
 pub use engine::SecurityEngine;
 pub use errors::{SecurityError, SecurityResult};
 pub use findings::SecurityFinding;
+pub use formatter::ReportFormat;
 pub use reporting::SecurityReport;
 pub use severity::SecuritySeverity;
-pub use category::SecurityCategory;
-pub use formatter::ReportFormat;

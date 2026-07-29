@@ -67,7 +67,10 @@ fn test_finding_id_is_deterministic_for_same_inputs() {
         "Fix it",
     );
 
-    assert_eq!(f1.id, f2.id, "IDs must be deterministic for identical inputs");
+    assert_eq!(
+        f1.id, f2.id,
+        "IDs must be deterministic for identical inputs"
+    );
 }
 
 #[test]
@@ -92,7 +95,10 @@ fn test_finding_id_differs_for_different_rules() {
         "fix",
     );
 
-    assert_ne!(f1.id, f2.id, "Different rule IDs must produce different finding IDs");
+    assert_ne!(
+        f1.id, f2.id,
+        "Different rule IDs must produce different finding IDs"
+    );
 }
 
 #[test]
@@ -127,6 +133,9 @@ fn test_category_display_names_are_non_empty() {
         SecurityCategory::Configuration,
     ];
     for cat in &cats {
-        assert!(!cat.display_name().is_empty(), "Category {cat:?} has empty display name");
+        assert!(
+            !cat.display_name().is_empty(),
+            "Category {cat:?} has empty display name"
+        );
     }
 }

@@ -4,10 +4,14 @@ pub struct AnsibleStarter;
 
 impl TemplateGenerator for AnsibleStarter {
     fn generate(&self, config: &ProjectConfig) -> Vec<GeneratedFile> {
-        let playbook = config.get_answer("playbook").map(|s| s.as_str()).unwrap_or("Docker Install");
+        let playbook = config
+            .get_answer("playbook")
+            .map(|s| s.as_str())
+            .unwrap_or("Docker Install");
 
         let content = match playbook {
-            "Docker Install" => r#"---
+            "Docker Install" => {
+                r#"---
 - name: Install Docker
   hosts: all
   become: yes
@@ -46,8 +50,10 @@ impl TemplateGenerator for AnsibleStarter {
         name: docker
         state: started
         enabled: yes
-"#,
-            "Nginx Install" => r#"---
+"#
+            }
+            "Nginx Install" => {
+                r#"---
 - name: Install and Configure Nginx
   hosts: webservers
   become: yes
@@ -63,8 +69,10 @@ impl TemplateGenerator for AnsibleStarter {
         name: nginx
         state: started
         enabled: yes
-"#,
-            "Create User" => r#"---
+"#
+            }
+            "Create User" => {
+                r#"---
 - name: Create a new user
   hosts: all
   become: yes
@@ -77,8 +85,10 @@ impl TemplateGenerator for AnsibleStarter {
         state: present
         shell: /bin/bash
         createhome: yes
-"#,
-            "SSH Hardening" => r#"---
+"#
+            }
+            "SSH Hardening" => {
+                r#"---
 - name: Harden SSH
   hosts: all
   become: yes
@@ -104,8 +114,10 @@ impl TemplateGenerator for AnsibleStarter {
       service:
         name: sshd
         state: restarted
-"#,
-            "Deploy App" => r#"---
+"#
+            }
+            "Deploy App" => {
+                r#"---
 - name: Deploy Application
   hosts: app_servers
   become: yes
@@ -121,14 +133,17 @@ impl TemplateGenerator for AnsibleStarter {
       systemd:
         name: myapp
         state: restarted
-"#,
-            _ => r#"---
+"#
+            }
+            _ => {
+                r#"---
 - name: Generic Playbook
   hosts: all
   tasks:
     - name: Ping
       ping:
-"#,
+"#
+            }
         };
 
         vec![GeneratedFile {

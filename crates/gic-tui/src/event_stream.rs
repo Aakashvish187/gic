@@ -17,8 +17,8 @@ impl EventStream {
 
     /// Blocks until the next input event arrives.
     pub fn next_event(&self) -> Result<InputEvent, GicError> {
-        let raw_event = event::read()
-            .map_err(|e| GicError::Terminal(format!("Event read error: {}", e)))?;
+        let raw_event =
+            event::read().map_err(|e| GicError::Terminal(format!("Event read error: {}", e)))?;
 
         match raw_event {
             CrosstermEvent::Key(key_event) => {

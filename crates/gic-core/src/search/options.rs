@@ -1,8 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Mode of search pattern interpretation.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum SearchMode {
     /// Exact literal text matching (default).
     #[default]
@@ -17,10 +16,8 @@ pub enum SearchMode {
     RegexPlaceholder,
 }
 
-
 /// Search direction across the buffer.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum SearchDirection {
     /// Search forward from cursor towards end of buffer.
     #[default]
@@ -29,10 +26,8 @@ pub enum SearchDirection {
     Backward,
 }
 
-
 /// Boundaries or scope for search execution.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum SearchScope {
     /// Search entire text buffer (default).
     #[default]
@@ -44,7 +39,6 @@ pub enum SearchScope {
     /// Search within visible viewport range `(start_row..=end_row)`.
     VisibleViewport { start_row: usize, end_row: usize },
 }
-
 
 /// Comprehensive search parameters and user preferences.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]

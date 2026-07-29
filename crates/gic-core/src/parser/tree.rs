@@ -76,14 +76,15 @@ impl SyntaxTree {
         let mut symbols = Vec::new();
         self.root.walk(|node| match &node.kind {
             NodeKind::Section | NodeKind::Pair | NodeKind::Block | NodeKind::Statement
-                if !node.name.is_empty() && node.name != "document" => {
-                    symbols.push(SymbolInformation {
-                        name: node.name.clone(),
-                        kind: format!("{:?}", node.kind),
-                        range: node.range,
-                        container_name: None,
-                    });
-                }
+                if !node.name.is_empty() && node.name != "document" =>
+            {
+                symbols.push(SymbolInformation {
+                    name: node.name.clone(),
+                    kind: format!("{:?}", node.kind),
+                    range: node.range,
+                    container_name: None,
+                });
+            }
             _ => {}
         });
         symbols

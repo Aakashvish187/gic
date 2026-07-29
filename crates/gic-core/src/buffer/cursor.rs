@@ -1,15 +1,15 @@
 use serde::{Deserialize, Serialize};
 
 /// 0-indexed position within a text buffer (row, character column).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, Default,
+)]
 pub struct CursorPosition {
     /// 0-indexed line index.
     pub row: usize,
     /// 0-indexed character scalar index within the line.
     pub col: usize,
 }
-
 
 impl CursorPosition {
     /// Creates a new `CursorPosition`.

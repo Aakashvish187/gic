@@ -28,9 +28,7 @@ impl RuleCache {
     /// Stores the evaluation actions for a rule against a specific file.
     pub fn insert(&self, file_path: &str, rule_id: &str, actions: Vec<DiagnosticAction>) {
         let mut lock = self.cached_results.write().unwrap();
-        let file_cache = lock
-            .entry(file_path.to_string())
-            .or_default();
+        let file_cache = lock.entry(file_path.to_string()).or_default();
         file_cache.insert(rule_id.to_string(), actions);
     }
 

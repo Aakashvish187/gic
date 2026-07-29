@@ -20,7 +20,10 @@ impl LinuxSecurityAdapter {
         let mut findings = Vec::new();
 
         for diag in diagnostics {
-            if diag.rule_name.contains("Linux") || diag.rule_name.starts_with("LNX") || diag.rule_name.contains("chmod") {
+            if diag.rule_name.contains("Linux")
+                || diag.rule_name.starts_with("LNX")
+                || diag.rule_name.contains("chmod")
+            {
                 let severity = match diag.severity {
                     DiagnosticLevel::Security | DiagnosticLevel::Error => SecuritySeverity::High,
                     DiagnosticLevel::Warning => SecuritySeverity::Medium,

@@ -8,8 +8,8 @@ use ratatui::layout::Rect;
 use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
 
-use gic_core::language_engine::{EngineDiagnostic, EngineSeverity, HoverInfo};
 use crate::renderer::themes::Theme;
+use gic_core::language_engine::{EngineDiagnostic, EngineSeverity, HoverInfo};
 
 pub struct IntelligencePanelRenderer<'a> {
     pub diagnostics: &'a [EngineDiagnostic],
@@ -38,7 +38,9 @@ impl<'a> IntelligencePanelRenderer<'a> {
             return;
         }
 
-        let bg = Style::default().fg(self.theme.panel_header).bg(self.theme.panel_bg);
+        let bg = Style::default()
+            .fg(self.theme.panel_header)
+            .bg(self.theme.panel_bg);
 
         // Fill background
         for y in area.y..area.y + area.height {
@@ -48,9 +50,13 @@ impl<'a> IntelligencePanelRenderer<'a> {
         }
 
         // Draw left border
-        let border_style = Style::default().fg(self.theme.panel_border).bg(self.theme.panel_bg);
+        let border_style = Style::default()
+            .fg(self.theme.panel_border)
+            .bg(self.theme.panel_bg);
         for y in area.y..area.y + area.height {
-            buf.get_mut(area.x, y).set_style(border_style).set_symbol("│");
+            buf.get_mut(area.x, y)
+                .set_style(border_style)
+                .set_symbol("│");
         }
 
         let content_x = area.x + 2; // after border + 1 padding
@@ -71,24 +77,49 @@ impl<'a> IntelligencePanelRenderer<'a> {
         // Separator
         let sep = "─".repeat(content_width.min(area.width.saturating_sub(2) as usize));
         let sep_line = Line::from(Span::styled(sep, border_style));
-        buf.set_line(content_x, current_y, &sep_line, area.width.saturating_sub(3));
+        buf.set_line(
+            content_x,
+            current_y,
+            &sep_line,
+            area.width.saturating_sub(3),
+        );
         current_y += 1;
 
         // Diagnostics section
         if !self.diagnostics.is_empty() {
-            let error_count = self.diagnostics.iter().filter(|d| d.severity == EngineSeverity::Error).count();
-            let warn_count = self.diagnostics.iter().filter(|d| d.severity == EngineSeverity::Warning).count();
-            let hint_count = self.diagnostics.iter().filter(|d| d.severity == EngineSeverity::Hint || d.severity == EngineSeverity::Info).count();
+            let error_count = self
+                .diagnostics
+                .iter()
+                .filter(|d| d.severity == EngineSeverity::Error)
+                .count();
+            let warn_count = self
+                .diagnostics
+                .iter()
+                .filter(|d| d.severity == EngineSeverity::Warning)
+                .count();
+            let hint_count = self
+                .diagnostics
+                .iter()
+                .filter(|d| {
+                    d.severity == EngineSeverity::Hint || d.severity == EngineSeverity::Info
+                })
+                .count();
 
             // Section header
             let header = Line::from(vec![
-                Span::styled("DIAGNOSTICS", Style::default()
-                    .fg(self.theme.panel_header)
-                    .bg(self.theme.panel_bg)
-                    .add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    "DIAGNOSTICS",
+                    Style::default()
+                        .fg(self.theme.panel_header)
+                        .bg(self.theme.panel_bg)
+                        .add_modifier(Modifier::BOLD),
+                ),
                 Span::styled(
                     format!(" ❌{} ⚠{} 💡{}", error_count, warn_count, hint_count),
-                    Style::default().fg(self.theme.foreground).bg(self.theme.panel_bg)),
+                    Style::default()
+                        .fg(self.theme.foreground)
+                        .bg(self.theme.panel_bg),
+                ),
             ]);
             if current_y < area.y + area.height {
                 buf.set_line(content_x, current_y, &header, content_width as u16);
@@ -114,7 +145,10 @@ impl<'a> IntelligencePanelRenderer<'a> {
                     .take(content_width)
                     .collect();
 
-                let line = Line::from(Span::styled(msg, Style::default().fg(severity_color).bg(self.theme.panel_bg)));
+                let line = Line::from(Span::styled(
+                    msg,
+                    Style::default().fg(severity_color).bg(self.theme.panel_bg),
+                ));
                 buf.set_line(content_x, current_y, &line, content_width as u16);
                 current_y += 1;
             }
@@ -125,8 +159,13 @@ impl<'a> IntelligencePanelRenderer<'a> {
         // Documentation section (from hover)
         if let Some(hover) = self.hover_info {
             if current_y < area.y + area.height {
-                let header = Line::from(Span::styled("DOCUMENTATION", Style::default()
-                    .fg(self.theme.panel_header).bg(self.theme.panel_bg).add_modifier(Modifier::BOLD)));
+                let header = Line::from(Span::styled(
+                    "DOCUMENTATION",
+                    Style::default()
+                        .fg(self.theme.panel_header)
+                        .bg(self.theme.panel_bg)
+                        .add_modifier(Modifier::BOLD),
+                ));
                 buf.set_line(content_x, current_y, &header, content_width as u16);
                 current_y += 1;
             }
@@ -135,7 +174,10 @@ impl<'a> IntelligencePanelRenderer<'a> {
             if current_y < area.y + area.height {
                 let title_line = Line::from(Span::styled(
                     truncate_str(&hover.title, content_width),
-                    Style::default().fg(self.theme.top_bar_accent).bg(self.theme.panel_bg).add_modifier(Modifier::BOLD),
+                    Style::default()
+                        .fg(self.theme.top_bar_accent)
+                        .bg(self.theme.panel_bg)
+                        .add_modifier(Modifier::BOLD),
                 ));
                 buf.set_line(content_x, current_y, &title_line, content_width as u16);
                 current_y += 1;
@@ -146,7 +188,12 @@ impl<'a> IntelligencePanelRenderer<'a> {
                 if current_y >= area.y + area.height {
                     break;
                 }
-                let line = Line::from(Span::styled(desc_line, Style::default().fg(self.theme.foreground).bg(self.theme.panel_bg)));
+                let line = Line::from(Span::styled(
+                    desc_line,
+                    Style::default()
+                        .fg(self.theme.foreground)
+                        .bg(self.theme.panel_bg),
+                ));
                 buf.set_line(content_x, current_y, &line, content_width as u16);
                 current_y += 1;
             }
@@ -155,8 +202,13 @@ impl<'a> IntelligencePanelRenderer<'a> {
             if let Some(bp) = &hover.best_practice {
                 current_y += 1;
                 if current_y < area.y + area.height {
-                    let bp_header = Line::from(Span::styled("💡 Best Practice:", Style::default()
-                        .fg(self.theme.diagnostic_info).bg(self.theme.panel_bg).add_modifier(Modifier::BOLD)));
+                    let bp_header = Line::from(Span::styled(
+                        "💡 Best Practice:",
+                        Style::default()
+                            .fg(self.theme.diagnostic_info)
+                            .bg(self.theme.panel_bg)
+                            .add_modifier(Modifier::BOLD),
+                    ));
                     buf.set_line(content_x, current_y, &bp_header, content_width as u16);
                     current_y += 1;
                 }
@@ -164,7 +216,12 @@ impl<'a> IntelligencePanelRenderer<'a> {
                     if current_y >= area.y + area.height {
                         break;
                     }
-                    let line = Line::from(Span::styled(bp_line, Style::default().fg(self.theme.diagnostic_info).bg(self.theme.panel_bg)));
+                    let line = Line::from(Span::styled(
+                        bp_line,
+                        Style::default()
+                            .fg(self.theme.diagnostic_info)
+                            .bg(self.theme.panel_bg),
+                    ));
                     buf.set_line(content_x, current_y, &line, content_width as u16);
                     current_y += 1;
                 }
@@ -172,10 +229,15 @@ impl<'a> IntelligencePanelRenderer<'a> {
         }
 
         // If nothing to show
-        if self.diagnostics.is_empty() && self.hover_info.is_none() && current_y < area.y + area.height {
+        if self.diagnostics.is_empty()
+            && self.hover_info.is_none()
+            && current_y < area.y + area.height
+        {
             let msg = Line::from(Span::styled(
                 "No issues found ✓",
-                Style::default().fg(self.theme.panel_border).bg(self.theme.panel_bg),
+                Style::default()
+                    .fg(self.theme.panel_border)
+                    .bg(self.theme.panel_bg),
             ));
             buf.set_line(content_x, current_y, &msg, content_width as u16);
         }

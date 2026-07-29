@@ -11,8 +11,12 @@ impl BashEngine {
 }
 
 impl LanguageEngine for BashEngine {
-    fn name(&self) -> &'static str { "Shell Script" }
-    fn id(&self) -> &'static str { "bash" }
+    fn name(&self) -> &'static str {
+        "Shell Script"
+    }
+    fn id(&self) -> &'static str {
+        "bash"
+    }
 
     fn diagnostics(&self, content: &str) -> Vec<EngineDiagnostic> {
         let mut diagnostics = Vec::new();
@@ -55,30 +59,42 @@ impl LanguageEngine for BashEngine {
             // Check for common mistakes
             if trimmed.starts_with("cd ") && !trimmed.contains("||") && !trimmed.contains("&&") {
                 diagnostics.push(
-                    EngineDiagnostic::hint(row, 0,
+                    EngineDiagnostic::hint(
+                        row,
+                        0,
                         "'cd' without error handling. Use 'cd dir || exit 1'.",
-                        "bash")
-                        .with_code("SH002")
+                        "bash",
+                    )
+                    .with_code("SH002"),
                 );
             }
 
             // Check for 'rm -rf /' or similar dangerous commands
-            if trimmed.contains("rm -rf /") && !trimmed.contains("rm -rf /$") && !trimmed.contains("rm -rf /\"") {
+            if trimmed.contains("rm -rf /")
+                && !trimmed.contains("rm -rf /$")
+                && !trimmed.contains("rm -rf /\"")
+            {
                 diagnostics.push(
-                    EngineDiagnostic::error(row, 0,
+                    EngineDiagnostic::error(
+                        row,
+                        0,
                         "DANGEROUS: 'rm -rf /' will destroy the entire filesystem!",
-                        "bash")
-                        .with_code("SH003")
+                        "bash",
+                    )
+                    .with_code("SH003"),
                 );
             }
 
             // Check for 'eval' usage
             if trimmed.starts_with("eval ") || trimmed.contains(" eval ") {
                 diagnostics.push(
-                    EngineDiagnostic::warning(row, trimmed.find("eval").unwrap_or(0),
+                    EngineDiagnostic::warning(
+                        row,
+                        trimmed.find("eval").unwrap_or(0),
                         "'eval' is dangerous and can execute arbitrary code. Avoid if possible.",
-                        "bash")
-                        .with_code("SH004")
+                        "bash",
+                    )
+                    .with_code("SH004"),
                 );
             }
         }
@@ -87,10 +103,13 @@ impl LanguageEngine for BashEngine {
         if let Some(first_line) = content.lines().next() {
             if !first_line.starts_with("#!") {
                 diagnostics.push(
-                    EngineDiagnostic::hint(0, 0,
+                    EngineDiagnostic::hint(
+                        0,
+                        0,
                         "Missing shebang line. Add '#!/usr/bin/env bash' at the top.",
-                        "bash")
-                        .with_code("SH005")
+                        "bash",
+                    )
+                    .with_code("SH005"),
                 );
             }
         }
@@ -102,10 +121,13 @@ impl LanguageEngine for BashEngine {
         });
         if !has_strict_mode && content.lines().count() > 5 {
             diagnostics.push(
-                EngineDiagnostic::hint(0, 0,
+                EngineDiagnostic::hint(
+                    0,
+                    0,
                     "Consider adding 'set -euo pipefail' for safer script execution.",
-                    "bash")
-                    .with_code("SH006")
+                    "bash",
+                )
+                .with_code("SH006"),
             );
         }
 
@@ -114,12 +136,42 @@ impl LanguageEngine for BashEngine {
 
     fn completions(&self, _content: &str, _row: usize, _col: usize) -> Vec<Completion> {
         vec![
-            Completion::new("if", "if [ condition ]; then\n  \nfi", CompletionKind::Snippet).with_detail("If statement"),
-            Completion::new("for", "for item in list; do\n  \ndone", CompletionKind::Snippet).with_detail("For loop"),
-            Completion::new("while", "while [ condition ]; do\n  \ndone", CompletionKind::Snippet).with_detail("While loop"),
-            Completion::new("function", "function name() {\n  \n}", CompletionKind::Snippet).with_detail("Function definition"),
-            Completion::new("case", "case $var in\n  pattern)\n    ;;\nesac", CompletionKind::Snippet).with_detail("Case statement"),
-            Completion::new("#!/usr/bin/env bash", "#!/usr/bin/env bash\nset -euo pipefail\n", CompletionKind::Snippet).with_detail("Safe shebang"),
+            Completion::new(
+                "if",
+                "if [ condition ]; then\n  \nfi",
+                CompletionKind::Snippet,
+            )
+            .with_detail("If statement"),
+            Completion::new(
+                "for",
+                "for item in list; do\n  \ndone",
+                CompletionKind::Snippet,
+            )
+            .with_detail("For loop"),
+            Completion::new(
+                "while",
+                "while [ condition ]; do\n  \ndone",
+                CompletionKind::Snippet,
+            )
+            .with_detail("While loop"),
+            Completion::new(
+                "function",
+                "function name() {\n  \n}",
+                CompletionKind::Snippet,
+            )
+            .with_detail("Function definition"),
+            Completion::new(
+                "case",
+                "case $var in\n  pattern)\n    ;;\nesac",
+                CompletionKind::Snippet,
+            )
+            .with_detail("Case statement"),
+            Completion::new(
+                "#!/usr/bin/env bash",
+                "#!/usr/bin/env bash\nset -euo pipefail\n",
+                CompletionKind::Snippet,
+            )
+            .with_detail("Safe shebang"),
         ]
     }
 

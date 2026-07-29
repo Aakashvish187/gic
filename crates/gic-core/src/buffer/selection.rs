@@ -2,8 +2,7 @@ use crate::buffer::cursor::CursorPosition;
 use serde::{Deserialize, Serialize};
 
 /// Selection highlight mode in the text buffer.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum SelectionMode {
     /// Standard continuous character selection.
     #[default]
@@ -13,7 +12,6 @@ pub enum SelectionMode {
     /// Rectangular block selection mode.
     Block,
 }
-
 
 /// Represents an active or inactive text selection range.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

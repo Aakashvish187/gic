@@ -1,4 +1,6 @@
-use crate::starter_engine::models::{GeneratedFile, ProjectConfig, Question, QuestionType, TemplateGenerator};
+use crate::starter_engine::models::{
+    GeneratedFile, ProjectConfig, Question, QuestionType, TemplateGenerator,
+};
 
 pub struct KubernetesStarter;
 
@@ -36,47 +38,75 @@ impl KubernetesStarter {
                     "Blank Deployment".to_string(),
                 ]),
                 condition: Some(|config| {
-                    config.get_answer("k8s_kind").map(|k| k == "Kubernetes Deployment").unwrap_or(false)
+                    config
+                        .get_answer("k8s_kind")
+                        .map(|k| k == "Kubernetes Deployment")
+                        .unwrap_or(false)
                 }),
             },
             Question {
                 id: "app_name".to_string(),
                 prompt: "Application Name:".to_string(),
-                q_type: QuestionType::Text { default: "my-app".to_string() },
+                q_type: QuestionType::Text {
+                    default: "my-app".to_string(),
+                },
                 condition: Some(|config| {
-                    config.get_answer("k8s_kind").map(|k| k != "Manual (Empty File)").unwrap_or(true)
+                    config
+                        .get_answer("k8s_kind")
+                        .map(|k| k != "Manual (Empty File)")
+                        .unwrap_or(true)
                 }),
             },
             Question {
                 id: "namespace".to_string(),
                 prompt: "Namespace:".to_string(),
-                q_type: QuestionType::Text { default: "default".to_string() },
+                q_type: QuestionType::Text {
+                    default: "default".to_string(),
+                },
                 condition: Some(|config| {
-                    config.get_answer("k8s_kind").map(|k| k != "Manual (Empty File)").unwrap_or(true)
+                    config
+                        .get_answer("k8s_kind")
+                        .map(|k| k != "Manual (Empty File)")
+                        .unwrap_or(true)
                 }),
             },
             Question {
                 id: "replicas".to_string(),
                 prompt: "Number of replicas:".to_string(),
-                q_type: QuestionType::Text { default: "3".to_string() },
+                q_type: QuestionType::Text {
+                    default: "3".to_string(),
+                },
                 condition: Some(|config| {
-                    config.get_answer("k8s_kind").map(|k| k == "Kubernetes Deployment").unwrap_or(false)
+                    config
+                        .get_answer("k8s_kind")
+                        .map(|k| k == "Kubernetes Deployment")
+                        .unwrap_or(false)
                 }),
             },
             Question {
                 id: "container_port".to_string(),
                 prompt: "Container Port:".to_string(),
-                q_type: QuestionType::Text { default: "80".to_string() },
+                q_type: QuestionType::Text {
+                    default: "80".to_string(),
+                },
                 condition: Some(|config| {
-                    config.get_answer("k8s_kind").map(|k| k == "Kubernetes Deployment").unwrap_or(false)
+                    config
+                        .get_answer("k8s_kind")
+                        .map(|k| k == "Kubernetes Deployment")
+                        .unwrap_or(false)
                 }),
             },
             Question {
                 id: "image".to_string(),
                 prompt: "Container Image:".to_string(),
-                q_type: QuestionType::Text { default: "nginx:latest".to_string() },
+                q_type: QuestionType::Text {
+                    default: "nginx:latest".to_string(),
+                },
                 condition: Some(|config| {
-                    config.get_answer("k8s_kind").map(|k| k == "Kubernetes Deployment").unwrap_or(false)
+                    config
+                        .get_answer("k8s_kind")
+                        .map(|k| k == "Kubernetes Deployment")
+                        .unwrap_or(false)
                 }),
             },
             Question {
@@ -84,7 +114,10 @@ impl KubernetesStarter {
                 prompt: "Would you like Resource Requests?".to_string(),
                 q_type: QuestionType::Boolean,
                 condition: Some(|config| {
-                    config.get_answer("k8s_kind").map(|k| k == "Kubernetes Deployment").unwrap_or(false)
+                    config
+                        .get_answer("k8s_kind")
+                        .map(|k| k == "Kubernetes Deployment")
+                        .unwrap_or(false)
                 }),
             },
             Question {
@@ -92,7 +125,10 @@ impl KubernetesStarter {
                 prompt: "Would you like Resource Limits?".to_string(),
                 q_type: QuestionType::Boolean,
                 condition: Some(|config| {
-                    config.get_answer("k8s_kind").map(|k| k == "Kubernetes Deployment").unwrap_or(false)
+                    config
+                        .get_answer("k8s_kind")
+                        .map(|k| k == "Kubernetes Deployment")
+                        .unwrap_or(false)
                 }),
             },
             Question {
@@ -100,7 +136,10 @@ impl KubernetesStarter {
                 prompt: "Enable Liveness Probe?".to_string(),
                 q_type: QuestionType::Boolean,
                 condition: Some(|config| {
-                    config.get_answer("k8s_kind").map(|k| k == "Kubernetes Deployment").unwrap_or(false)
+                    config
+                        .get_answer("k8s_kind")
+                        .map(|k| k == "Kubernetes Deployment")
+                        .unwrap_or(false)
                 }),
             },
             Question {
@@ -108,7 +147,10 @@ impl KubernetesStarter {
                 prompt: "Enable Readiness Probe?".to_string(),
                 q_type: QuestionType::Boolean,
                 condition: Some(|config| {
-                    config.get_answer("k8s_kind").map(|k| k == "Kubernetes Deployment").unwrap_or(false)
+                    config
+                        .get_answer("k8s_kind")
+                        .map(|k| k == "Kubernetes Deployment")
+                        .unwrap_or(false)
                 }),
             },
             Question {
@@ -116,7 +158,10 @@ impl KubernetesStarter {
                 prompt: "Generate Service?".to_string(),
                 q_type: QuestionType::Boolean,
                 condition: Some(|config| {
-                    config.get_answer("k8s_kind").map(|k| k == "Kubernetes Deployment").unwrap_or(false)
+                    config
+                        .get_answer("k8s_kind")
+                        .map(|k| k == "Kubernetes Deployment")
+                        .unwrap_or(false)
                 }),
             },
             Question {
@@ -124,8 +169,14 @@ impl KubernetesStarter {
                 prompt: "Generate Ingress?".to_string(),
                 q_type: QuestionType::Boolean,
                 condition: Some(|config| {
-                    let kind = config.get_answer("k8s_kind").map(|k| k.as_str()).unwrap_or("");
-                    let has_service = config.get_answer("enable_service").map(|v| v == "true").unwrap_or(false);
+                    let kind = config
+                        .get_answer("k8s_kind")
+                        .map(|k| k.as_str())
+                        .unwrap_or("");
+                    let has_service = config
+                        .get_answer("enable_service")
+                        .map(|v| v == "true")
+                        .unwrap_or(false);
                     (kind == "Kubernetes Deployment" && has_service) || kind == "Kubernetes Service"
                 }),
             },
@@ -133,19 +184,46 @@ impl KubernetesStarter {
     }
 
     fn generate_deployment(config: &ProjectConfig) -> GeneratedFile {
-        let app_name = config.get_answer("app_name").unwrap_or(&"my-app".to_string()).clone();
-        let namespace = config.get_answer("namespace").unwrap_or(&"default".to_string()).clone();
-        let replicas = config.get_answer("replicas").unwrap_or(&"3".to_string()).clone();
-        let image = config.get_answer("image").unwrap_or(&"nginx:latest".to_string()).clone();
-        let port = config.get_answer("container_port").unwrap_or(&"80".to_string()).clone();
+        let app_name = config
+            .get_answer("app_name")
+            .unwrap_or(&"my-app".to_string())
+            .clone();
+        let namespace = config
+            .get_answer("namespace")
+            .unwrap_or(&"default".to_string())
+            .clone();
+        let replicas = config
+            .get_answer("replicas")
+            .unwrap_or(&"3".to_string())
+            .clone();
+        let image = config
+            .get_answer("image")
+            .unwrap_or(&"nginx:latest".to_string())
+            .clone();
+        let port = config
+            .get_answer("container_port")
+            .unwrap_or(&"80".to_string())
+            .clone();
 
-        let reqs = if config.get_answer("resource_requests").map(|v| v == "true").unwrap_or(false) {
+        let reqs = if config
+            .get_answer("resource_requests")
+            .map(|v| v == "true")
+            .unwrap_or(false)
+        {
             "          requests:\n            cpu: \"100m\"\n            memory: \"128Mi\"\n"
-        } else { "" };
+        } else {
+            ""
+        };
 
-        let limits = if config.get_answer("resource_limits").map(|v| v == "true").unwrap_or(false) {
+        let limits = if config
+            .get_answer("resource_limits")
+            .map(|v| v == "true")
+            .unwrap_or(false)
+        {
             "          limits:\n            cpu: \"500m\"\n            memory: \"512Mi\"\n"
-        } else { "" };
+        } else {
+            ""
+        };
 
         let resources_block = if !reqs.is_empty() || !limits.is_empty() {
             format!("        resources:\n{}{}", reqs, limits)
@@ -153,13 +231,25 @@ impl KubernetesStarter {
             String::new()
         };
 
-        let liveness = if config.get_answer("liveness_probe").map(|v| v == "true").unwrap_or(false) {
+        let liveness = if config
+            .get_answer("liveness_probe")
+            .map(|v| v == "true")
+            .unwrap_or(false)
+        {
             format!("        livenessProbe:\n          httpGet:\n            path: /\n            port: {}\n          initialDelaySeconds: 15\n          periodSeconds: 20\n", port)
-        } else { String::new() };
+        } else {
+            String::new()
+        };
 
-        let readiness = if config.get_answer("readiness_probe").map(|v| v == "true").unwrap_or(false) {
+        let readiness = if config
+            .get_answer("readiness_probe")
+            .map(|v| v == "true")
+            .unwrap_or(false)
+        {
             format!("        readinessProbe:\n          httpGet:\n            path: /\n            port: {}\n          initialDelaySeconds: 5\n          periodSeconds: 10\n", port)
-        } else { String::new() };
+        } else {
+            String::new()
+        };
 
         let content = format!(
             r#"apiVersion: apps/v1
@@ -194,9 +284,18 @@ spec:
     }
 
     fn generate_service(config: &ProjectConfig) -> GeneratedFile {
-        let app_name = config.get_answer("app_name").unwrap_or(&"my-app".to_string()).clone();
-        let namespace = config.get_answer("namespace").unwrap_or(&"default".to_string()).clone();
-        let port = config.get_answer("container_port").unwrap_or(&"80".to_string()).clone();
+        let app_name = config
+            .get_answer("app_name")
+            .unwrap_or(&"my-app".to_string())
+            .clone();
+        let namespace = config
+            .get_answer("namespace")
+            .unwrap_or(&"default".to_string())
+            .clone();
+        let port = config
+            .get_answer("container_port")
+            .unwrap_or(&"80".to_string())
+            .clone();
 
         let content = format!(
             r#"apiVersion: v1
@@ -222,8 +321,14 @@ spec:
     }
 
     fn generate_ingress(config: &ProjectConfig) -> GeneratedFile {
-        let app_name = config.get_answer("app_name").unwrap_or(&"my-app".to_string()).clone();
-        let namespace = config.get_answer("namespace").unwrap_or(&"default".to_string()).clone();
+        let app_name = config
+            .get_answer("app_name")
+            .unwrap_or(&"my-app".to_string())
+            .clone();
+        let namespace = config
+            .get_answer("namespace")
+            .unwrap_or(&"default".to_string())
+            .clone();
 
         let content = format!(
             r#"apiVersion: networking.k8s.io/v1
@@ -254,7 +359,10 @@ spec:
     }
 
     fn generate_readme(config: &ProjectConfig) -> GeneratedFile {
-        let app_name = config.get_answer("app_name").unwrap_or(&"my-app".to_string()).clone();
+        let app_name = config
+            .get_answer("app_name")
+            .unwrap_or(&"my-app".to_string())
+            .clone();
 
         let content = format!(
             r#"# {app_name} Infrastructure
@@ -280,21 +388,36 @@ kubectl apply -f k8s/
 impl TemplateGenerator for KubernetesStarter {
     fn generate(&self, config: &ProjectConfig) -> Vec<GeneratedFile> {
         let mut files = Vec::new();
-        
-        let kind = config.get_answer("k8s_kind").map(|k| k.as_str()).unwrap_or("Kubernetes Deployment");
+
+        let kind = config
+            .get_answer("k8s_kind")
+            .map(|k| k.as_str())
+            .unwrap_or("Kubernetes Deployment");
 
         if kind == "Kubernetes Deployment" {
             files.push(Self::generate_deployment(config));
-            
-            if config.get_answer("enable_service").map(|v| v == "true").unwrap_or(false) {
+
+            if config
+                .get_answer("enable_service")
+                .map(|v| v == "true")
+                .unwrap_or(false)
+            {
                 files.push(Self::generate_service(config));
             }
-            if config.get_answer("enable_ingress").map(|v| v == "true").unwrap_or(false) {
+            if config
+                .get_answer("enable_ingress")
+                .map(|v| v == "true")
+                .unwrap_or(false)
+            {
                 files.push(Self::generate_ingress(config));
             }
         } else if kind == "Kubernetes Service" {
             files.push(Self::generate_service(config));
-            if config.get_answer("enable_ingress").map(|v| v == "true").unwrap_or(false) {
+            if config
+                .get_answer("enable_ingress")
+                .map(|v| v == "true")
+                .unwrap_or(false)
+            {
                 files.push(Self::generate_ingress(config));
             }
         } else if kind == "Ingress" {

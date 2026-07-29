@@ -19,7 +19,8 @@ pub fn detect_intent(path: &Path) -> ProjectType {
         "Chart.yaml" | "values.yaml" => {
             return ProjectType::Helm;
         }
-        "playbook.yml" | "playbook.yaml" | "inventory.yml" | "inventory.yaml" | "site.yml" | "site.yaml" => {
+        "playbook.yml" | "playbook.yaml" | "inventory.yml" | "inventory.yaml" | "site.yml"
+        | "site.yaml" => {
             return ProjectType::Ansible;
         }
         _ => {}
@@ -40,12 +41,9 @@ pub fn detect_intent(path: &Path) -> ProjectType {
         "yaml" | "yml" => {
             // Check Kubernetes specific names
             match file_name {
-                "deployment.yaml" | "deployment.yml" |
-                "service.yaml" | "service.yml" |
-                "ingress.yaml" | "ingress.yml" |
-                "pod.yaml" | "pod.yml" |
-                "configmap.yaml" | "configmap.yml" |
-                "secret.yaml" | "secret.yml" => {
+                "deployment.yaml" | "deployment.yml" | "service.yaml" | "service.yml"
+                | "ingress.yaml" | "ingress.yml" | "pod.yaml" | "pod.yml" | "configmap.yaml"
+                | "configmap.yml" | "secret.yaml" | "secret.yml" => {
                     return ProjectType::Kubernetes;
                 }
                 _ => return ProjectType::Kubernetes, // Default YAML to Kubernetes if inside IaC context

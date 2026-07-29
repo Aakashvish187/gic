@@ -160,9 +160,8 @@ impl K8sSecurityAnalyzer {
                         });
                     }
                 }
-                "readOnlyRootFilesystem"
-                    if !is_true(&pair.value.value) => {
-                        findings.push(SecurityFinding {
+                "readOnlyRootFilesystem" if !is_true(&pair.value.value) => {
+                    findings.push(SecurityFinding {
                             rule_id: "sec-k8s-read-only-root-fs".to_string(),
                             message: "Container root filesystem is writable (set 'readOnlyRootFilesystem: true')".to_string(),
                             severity: SecuritySeverity::Medium,
@@ -170,7 +169,7 @@ impl K8sSecurityAnalyzer {
                             span: pair.value.span,
                             fix_suggestion: Some("readOnlyRootFilesystem: true".to_string()),
                         });
-                    }
+                }
                 _ => {}
             }
 

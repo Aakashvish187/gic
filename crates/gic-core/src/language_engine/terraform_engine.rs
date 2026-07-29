@@ -11,8 +11,12 @@ impl TerraformEngine {
 }
 
 impl LanguageEngine for TerraformEngine {
-    fn name(&self) -> &'static str { "Terraform" }
-    fn id(&self) -> &'static str { "terraform" }
+    fn name(&self) -> &'static str {
+        "Terraform"
+    }
+    fn id(&self) -> &'static str {
+        "terraform"
+    }
 
     fn diagnostics(&self, content: &str) -> Vec<EngineDiagnostic> {
         let mut diagnostics = Vec::new();
@@ -25,7 +29,9 @@ impl LanguageEngine for TerraformEngine {
 
             // Check for hardcoded credentials
             let lower = trimmed.to_lowercase();
-            if (lower.contains("access_key") || lower.contains("secret_key") || lower.contains("password"))
+            if (lower.contains("access_key")
+                || lower.contains("secret_key")
+                || lower.contains("password"))
                 && trimmed.contains('=')
                 && trimmed.contains('"')
             {
@@ -86,19 +92,38 @@ impl LanguageEngine for TerraformEngine {
 
     fn completions(&self, _content: &str, _row: usize, _col: usize) -> Vec<Completion> {
         let blocks = [
-            ("resource", "Define a resource", "resource \"type\" \"name\" {\n  \n}"),
+            (
+                "resource",
+                "Define a resource",
+                "resource \"type\" \"name\" {\n  \n}",
+            ),
             ("data", "Data source", "data \"type\" \"name\" {\n  \n}"),
-            ("variable", "Input variable", "variable \"name\" {\n  type = string\n  default = \"\"\n}"),
+            (
+                "variable",
+                "Input variable",
+                "variable \"name\" {\n  type = string\n  default = \"\"\n}",
+            ),
             ("output", "Output value", "output \"name\" {\n  value = \n}"),
-            ("module", "Module call", "module \"name\" {\n  source = \"\"\n}"),
+            (
+                "module",
+                "Module call",
+                "module \"name\" {\n  source = \"\"\n}",
+            ),
             ("provider", "Provider config", "provider \"name\" {\n  \n}"),
-            ("terraform", "Terraform settings", "terraform {\n  required_version = \">= 1.0\"\n}"),
+            (
+                "terraform",
+                "Terraform settings",
+                "terraform {\n  required_version = \">= 1.0\"\n}",
+            ),
             ("locals", "Local values", "locals {\n  \n}"),
         ];
 
-        blocks.iter().map(|(name, detail, insert)| {
-            Completion::new(*name, *insert, CompletionKind::Snippet).with_detail(*detail)
-        }).collect()
+        blocks
+            .iter()
+            .map(|(name, detail, insert)| {
+                Completion::new(*name, *insert, CompletionKind::Snippet).with_detail(*detail)
+            })
+            .collect()
     }
 
     fn hover(&self, content: &str, row: usize, _col: usize) -> Option<HoverInfo> {

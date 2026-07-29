@@ -24,7 +24,9 @@ impl CertificateAnalyzer {
             let line_lower = line.to_lowercase();
             let line_no = line_idx + 1;
 
-            if line_lower.contains("ssl_verify: false") || line_lower.contains("insecure_skip_verify: true") {
+            if line_lower.contains("ssl_verify: false")
+                || line_lower.contains("insecure_skip_verify: true")
+            {
                 let evidence = FindingEvidence {
                     file_path: file_path.map(|p| p.to_path_buf()),
                     range: DiagnosticRange::new(

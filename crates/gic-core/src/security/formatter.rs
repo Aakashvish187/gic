@@ -39,11 +39,20 @@ impl SecurityReportFormatter {
         output.push_str(&format!("**Risk Score:** {}\n\n", report.risk_score));
         output.push_str("## Severity Summary\n\n");
         output.push_str(&format!("| Severity | Count |\n|----------|-------|\n"));
-        output.push_str(&format!("| 🔥 Critical | {} |\n", report.severity_counts.critical));
+        output.push_str(&format!(
+            "| 🔥 Critical | {} |\n",
+            report.severity_counts.critical
+        ));
         output.push_str(&format!("| 🚨 High | {} |\n", report.severity_counts.high));
-        output.push_str(&format!("| ⚠ Medium | {} |\n", report.severity_counts.medium));
+        output.push_str(&format!(
+            "| ⚠ Medium | {} |\n",
+            report.severity_counts.medium
+        ));
         output.push_str(&format!("| ⚡ Low | {} |\n", report.severity_counts.low));
-        output.push_str(&format!("| ℹ Information | {} |\n", report.severity_counts.information));
+        output.push_str(&format!(
+            "| ℹ Information | {} |\n",
+            report.severity_counts.information
+        ));
         output.push_str("\n## Findings\n\n");
         for finding in &report.findings {
             output.push_str(&format!(

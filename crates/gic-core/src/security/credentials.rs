@@ -24,7 +24,9 @@ impl CredentialsAnalyzer {
             let line_lower = line.to_lowercase();
             let line_no = line_idx + 1;
 
-            if (line_lower.contains("password=") || line_lower.contains("password:") || line_lower.contains("secret_key="))
+            if (line_lower.contains("password=")
+                || line_lower.contains("password:")
+                || line_lower.contains("secret_key="))
                 && !line_lower.contains("${")
                 && !line_lower.contains("env(")
                 && !line_lower.contains("secretkeyref")

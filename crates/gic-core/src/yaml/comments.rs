@@ -41,15 +41,19 @@ impl CommentHandler {
     fn bind_to_node(&self, node: &mut YamlNode, comments: &[YamlComment]) {
         for comment in comments {
             // Check leading comment
-            if !comment.is_inline && comment.span.end.line + 1 == node.span.start.line
-                && !node.leading_comments.contains(comment) {
-                    node.leading_comments.push(comment.clone());
-                }
+            if !comment.is_inline
+                && comment.span.end.line + 1 == node.span.start.line
+                && !node.leading_comments.contains(comment)
+            {
+                node.leading_comments.push(comment.clone());
+            }
             // Check trailing/inline comment on same line
-            if comment.is_inline && comment.span.start.line == node.span.start.line
-                && node.trailing_comment.is_none() {
-                    node.trailing_comment = Some(comment.clone());
-                }
+            if comment.is_inline
+                && comment.span.start.line == node.span.start.line
+                && node.trailing_comment.is_none()
+            {
+                node.trailing_comment = Some(comment.clone());
+            }
         }
 
         match &mut node.value {

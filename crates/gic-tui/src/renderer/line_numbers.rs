@@ -173,7 +173,6 @@ impl LineNumberRenderer {
                 if buffer_row == current_line {
                     buffer_row + 1 // Show absolute on cursor line
                 } else {
-                    
                     buffer_row.abs_diff(current_line)
                 }
             }
@@ -181,7 +180,6 @@ impl LineNumberRenderer {
                 if buffer_row == current_line {
                     buffer_row + 1 // Show absolute on cursor line
                 } else {
-                    
                     buffer_row.abs_diff(current_line)
                 }
             }

@@ -1,10 +1,10 @@
+use crate::renderer::themes::Theme;
 use gic_core::language_engine::HoverInfo;
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, Borders, Clear, Paragraph, Wrap, Widget};
-use crate::renderer::themes::Theme;
+use ratatui::widgets::{Block, Borders, Clear, Paragraph, Widget, Wrap};
 
 pub struct FloatingDocsRenderer<'a> {
     hover_info: &'a HoverInfo,
@@ -34,7 +34,12 @@ impl<'a> FloatingDocsRenderer<'a> {
         // Title
         lines.push(Line::from(vec![
             Span::styled(" 💡 ", Style::default().fg(Color::Yellow)),
-            Span::styled(self.hover_info.title.clone(), Style::default().fg(self.theme.foreground).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                self.hover_info.title.clone(),
+                Style::default()
+                    .fg(self.theme.foreground)
+                    .add_modifier(Modifier::BOLD),
+            ),
         ]));
 
         lines.push(Line::from("")); // Spacer
@@ -42,24 +47,39 @@ impl<'a> FloatingDocsRenderer<'a> {
         // Description
         let desc_lines: Vec<&str> = self.hover_info.description.lines().collect();
         for d in desc_lines {
-            lines.push(Line::from(Span::styled(d, Style::default().fg(Color::Gray))));
+            lines.push(Line::from(Span::styled(
+                d,
+                Style::default().fg(Color::Gray),
+            )));
         }
 
         // Syntax
         if let Some(syntax) = &self.hover_info.syntax {
             lines.push(Line::from(""));
-            lines.push(Line::from(Span::styled(" Syntax:", Style::default().fg(Color::Cyan))));
+            lines.push(Line::from(Span::styled(
+                " Syntax:",
+                Style::default().fg(Color::Cyan),
+            )));
             for s in syntax.lines() {
-                lines.push(Line::from(Span::styled(format!("  {}", s), Style::default().fg(Color::White))));
+                lines.push(Line::from(Span::styled(
+                    format!("  {}", s),
+                    Style::default().fg(Color::White),
+                )));
             }
         }
 
         // Best Practice
         if let Some(practice) = &self.hover_info.best_practice {
             lines.push(Line::from(""));
-            lines.push(Line::from(Span::styled(" Best Practice:", Style::default().fg(Color::Green))));
+            lines.push(Line::from(Span::styled(
+                " Best Practice:",
+                Style::default().fg(Color::Green),
+            )));
             for p in practice.lines() {
-                lines.push(Line::from(Span::styled(format!("  {}", p), Style::default().fg(Color::White))));
+                lines.push(Line::from(Span::styled(
+                    format!("  {}", p),
+                    Style::default().fg(Color::White),
+                )));
             }
         }
 
@@ -94,9 +114,7 @@ impl<'a> FloatingDocsRenderer<'a> {
             .border_style(Style::default().fg(self.theme.panel_border))
             .style(Style::default().bg(self.theme.panel_bg));
 
-        let paragraph = Paragraph::new(lines)
-            .block(block)
-            .wrap(Wrap { trim: true });
+        let paragraph = Paragraph::new(lines).block(block).wrap(Wrap { trim: true });
 
         ratatui::widgets::Widget::render(paragraph, popup_area, buf);
     }

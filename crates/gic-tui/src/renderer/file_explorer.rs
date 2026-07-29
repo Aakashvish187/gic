@@ -22,7 +22,11 @@ pub struct FileTreeEntry {
 impl FileTreeEntry {
     pub fn icon(&self) -> &'static str {
         if self.is_dir {
-            if self.expanded { "📂" } else { "📁" }
+            if self.expanded {
+                "📂"
+            } else {
+                "📁"
+            }
         } else {
             let name_lower = self.name.to_lowercase();
             if name_lower.contains("dockerfile") || name_lower == "containerfile" {
@@ -96,7 +100,9 @@ impl<'a> FileExplorerRenderer<'a> {
             return;
         }
 
-        let bg = Style::default().fg(self.theme.panel_header).bg(self.theme.panel_bg);
+        let bg = Style::default()
+            .fg(self.theme.panel_header)
+            .bg(self.theme.panel_bg);
 
         // Fill background
         for y in area.y..area.y + area.height {
@@ -106,31 +112,30 @@ impl<'a> FileExplorerRenderer<'a> {
         }
 
         // Draw right border
-        let border_style = Style::default().fg(self.theme.panel_border).bg(self.theme.panel_bg);
+        let border_style = Style::default()
+            .fg(self.theme.panel_border)
+            .bg(self.theme.panel_bg);
         let border_x = area.x + area.width - 1;
         for y in area.y..area.y + area.height {
-            buf.get_mut(border_x, y).set_style(border_style).set_symbol("│");
+            buf.get_mut(border_x, y)
+                .set_style(border_style)
+                .set_symbol("│");
         }
 
         // Header
-        let header = Line::from(vec![
-            Span::styled(
-                format!(" {} ", self.title),
-                Style::default()
-                    .fg(self.theme.panel_header)
-                    .bg(self.theme.panel_bg)
-                    .add_modifier(Modifier::BOLD),
-            ),
-        ]);
+        let header = Line::from(vec![Span::styled(
+            format!(" {} ", self.title),
+            Style::default()
+                .fg(self.theme.panel_header)
+                .bg(self.theme.panel_bg)
+                .add_modifier(Modifier::BOLD),
+        )]);
         buf.set_line(area.x, area.y, &header, area.width.saturating_sub(1));
 
         // Separator line
         if area.height > 1 {
             let sep = "─".repeat((area.width.saturating_sub(2)) as usize);
-            let sep_line = Line::from(Span::styled(
-                format!(" {}", sep),
-                border_style,
-            ));
+            let sep_line = Line::from(Span::styled(format!(" {}", sep), border_style));
             buf.set_line(area.x, area.y + 1, &sep_line, area.width.saturating_sub(1));
         }
 
@@ -139,7 +144,13 @@ impl<'a> FileExplorerRenderer<'a> {
         let content_height = area.height.saturating_sub(2) as usize;
         let usable_width = area.width.saturating_sub(2) as usize; // 1 padding + 1 border
 
-        for (i, entry) in self.entries.iter().skip(self.scroll_offset).take(content_height).enumerate() {
+        for (i, entry) in self
+            .entries
+            .iter()
+            .skip(self.scroll_offset)
+            .take(content_height)
+            .enumerate()
+        {
             let y = content_start + i as u16;
             if y >= area.y + area.height {
                 break;

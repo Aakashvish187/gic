@@ -75,8 +75,7 @@ impl RenderRegion {
 /// - `Block` for normal/command mode
 /// - `Beam` for insert mode
 /// - `Underline` for replace mode
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum CursorShape {
     /// Full-cell block cursor (█). Used in normal/command mode.
     #[default]
@@ -87,10 +86,8 @@ pub enum CursorShape {
     Underline,
 }
 
-
 /// Mode for displaying line numbers in the gutter.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum LineNumberMode {
     /// Show absolute line numbers (1, 2, 3, ...).
     #[default]
@@ -101,7 +98,6 @@ pub enum LineNumberMode {
     /// This is the most popular mode in vim-like editors.
     Hybrid,
 }
-
 
 /// Direction for scroll operations.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

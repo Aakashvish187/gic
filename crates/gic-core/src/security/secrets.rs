@@ -42,15 +42,19 @@ impl SecretScanner {
                 description: "Hardcoded AWS Access Key ID exposed in file.",
                 pattern: Regex::new(r"(?i)\b(AKIA[0-9A-Z]{16})\b")?,
                 severity: SecuritySeverity::Critical,
-                remediation: "Remove AWS Access Key ID and load from environment variables or AWS IAM Roles.",
+                remediation:
+                    "Remove AWS Access Key ID and load from environment variables or AWS IAM Roles.",
             },
             SecretRule {
                 rule_id: "SEC-002",
                 title: "AWS Secret Access Key Detected",
                 description: "Hardcoded AWS Secret Access Key exposed in file.",
-                pattern: Regex::new(r#"(?i)\b(aws_secret_access_key|aws_secret_key)\s*[:=]\s*['"]?([A-Za-z0-9/+=]{40})['"]?"#)?,
+                pattern: Regex::new(
+                    r#"(?i)\b(aws_secret_access_key|aws_secret_key)\s*[:=]\s*['"]?([A-Za-z0-9/+=]{40})['"]?"#,
+                )?,
                 severity: SecuritySeverity::Critical,
-                remediation: "Revoke key immediately and use secret managers like AWS Secrets Manager.",
+                remediation:
+                    "Revoke key immediately and use secret managers like AWS Secrets Manager.",
             },
             SecretRule {
                 rule_id: "SEC-003",
@@ -66,21 +70,27 @@ impl SecretScanner {
                 description: "Unencrypted Private Key header found in file.",
                 pattern: Regex::new(r"-----BEGIN (RSA|OPENSSH|DSA|EC|PRIVATE) KEY-----")?,
                 severity: SecuritySeverity::Critical,
-                remediation: "Do not commit private keys to version control. Store in protected keystore.",
+                remediation:
+                    "Do not commit private keys to version control. Store in protected keystore.",
             },
             SecretRule {
                 rule_id: "SEC-005",
                 title: "JWT Authentication Token Detected",
                 description: "Hardcoded JSON Web Token detected.",
-                pattern: Regex::new(r"\beyJ[A-Za-z0-9-_=]+\.eyJ[A-Za-z0-9-_=]+\.[A-Za-z0-9-_.+/=]+\b")?,
+                pattern: Regex::new(
+                    r"\beyJ[A-Za-z0-9-_=]+\.eyJ[A-Za-z0-9-_=]+\.[A-Za-z0-9-_.+/=]+\b",
+                )?,
                 severity: SecuritySeverity::High,
                 remediation: "Inject JWT tokens at runtime instead of hardcoding.",
             },
             SecretRule {
                 rule_id: "SEC-006",
                 title: "Database Connection String with Credentials",
-                description: "Hardcoded database connection string containing username and password.",
-                pattern: Regex::new(r"(?i)\b(postgres|postgresql|mysql|mongodb|redis)://[a-zA-Z0-9_]+:[^@\s]+@[a-zA-Z0-9.-]+")?,
+                description:
+                    "Hardcoded database connection string containing username and password.",
+                pattern: Regex::new(
+                    r"(?i)\b(postgres|postgresql|mysql|mongodb|redis)://[a-zA-Z0-9_]+:[^@\s]+@[a-zA-Z0-9.-]+",
+                )?,
                 severity: SecuritySeverity::Critical,
                 remediation: "Parameterize database credentials using secret stores.",
             },
@@ -105,7 +115,11 @@ impl SecretScanner {
                         file_path: file_path.map(|p| p.to_path_buf()),
                         range: DiagnosticRange::new(
                             DiagnosticPosition::new(line_no, col_no, mat.start()),
-                            DiagnosticPosition::new(line_no, col_no + mat.as_str().len(), mat.end()),
+                            DiagnosticPosition::new(
+                                line_no,
+                                col_no + mat.as_str().len(),
+                                mat.end(),
+                            ),
                         ),
                         snippet: sanitized_snippet,
                         rule_id: rule.rule_id.to_string(),

@@ -74,9 +74,13 @@ impl ContextResolver {
         let current_line = lines[row];
         let trimmed_line = current_line.trim_start();
         let actual_indent = current_line.len() - trimmed_line.len();
-        
+
         // Use the actual indent if the cursor is past it, otherwise use the cursor col
-        let mut logical_indent = if col >= actual_indent { actual_indent } else { col };
+        let mut logical_indent = if col >= actual_indent {
+            actual_indent
+        } else {
+            col
+        };
 
         // Determine if we are typing an array item
         if trimmed_line.starts_with("- ") {
@@ -96,7 +100,7 @@ impl ContextResolver {
             }
 
             let line_indent = line.len() - t.len();
-            
+
             // Calculate the actual indentation of the key
             let key_indent = if t.starts_with("- ") {
                 line_indent + 2
@@ -168,6 +172,9 @@ spec:
 
         // Let's resolve the context at the end of the last line (row 13, under ports)
         let ctx = ContextResolver::resolve_yaml(yaml, 13, 10, "kubernetes");
-        assert_eq!(ctx.path, vec!["spec", "template", "spec", "containers", "ports"]);
+        assert_eq!(
+            ctx.path,
+            vec!["spec", "template", "spec", "containers", "ports"]
+        );
     }
 }

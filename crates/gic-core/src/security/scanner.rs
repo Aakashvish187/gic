@@ -35,8 +35,14 @@ impl SecurityScanner {
         }
 
         findings.extend(self.secret_scanner.scan_buffer(file_path, content));
-        findings.extend(self.credentials_analyzer.analyze_content(file_path, content));
-        findings.extend(self.certificate_analyzer.analyze_content(file_path, content));
+        findings.extend(
+            self.credentials_analyzer
+                .analyze_content(file_path, content),
+        );
+        findings.extend(
+            self.certificate_analyzer
+                .analyze_content(file_path, content),
+        );
 
         findings
     }

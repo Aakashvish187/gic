@@ -4,14 +4,16 @@ use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::widgets::Widget;
 
+use crate::renderer::autocomplete_popup::AutocompletePopup;
 use crate::renderer::bottom_panel::BottomPanelRenderer;
 use crate::renderer::cursor_renderer::{cursor_shape_for_mode, CursorRenderInfo, CursorRenderer};
 use crate::renderer::errors::RenderError;
 use crate::renderer::file_explorer::FileExplorerRenderer;
 use crate::renderer::file_info::FileInfo;
 use crate::renderer::intelligence_panel::IntelligencePanelRenderer;
-use crate::renderer::layout::{EditorLayout, PaneLayout, LayoutEngine};
+use crate::renderer::layout::{EditorLayout, LayoutEngine, PaneLayout};
 use crate::renderer::line_numbers::LineNumberRenderer;
+use crate::renderer::quick_fix_popup::QuickFixPopup;
 use crate::renderer::render_state::RenderState;
 use crate::renderer::status_bar::StatusBarRenderer;
 use crate::renderer::syntax::highlighter::PlainTextHighlighter;
@@ -21,9 +23,7 @@ use crate::renderer::syntax::SyntaxHighlighter;
 use crate::renderer::text_renderer::TextRenderer;
 use crate::renderer::top_bar::TopBarRenderer;
 use crate::renderer::types::LineNumberMode;
-use crate::renderer::autocomplete_popup::AutocompletePopup;
-use crate::renderer::quick_fix_popup::QuickFixPopup;
-use gic_core::{TextBuffer, Document};
+use gic_core::{Document, TextBuffer};
 
 pub struct RenderPipeline {
     text_renderer: TextRenderer,
@@ -79,9 +79,18 @@ impl RenderPipeline {
     ) -> Result<CursorRenderInfo, RenderError> {
         let panes = &state.editor.workspace.panes;
 
-        let pane_line_counts: Vec<usize> = panes.iter().map(|p| {
-            state.editor.workspace.buffers.get(&p.buffer_id).map(|b| b.line_count()).unwrap_or(1)
-        }).collect();
+        let pane_line_counts: Vec<usize> = panes
+            .iter()
+            .map(|p| {
+                state
+                    .editor
+                    .workspace
+                    .buffers
+                    .get(&p.buffer_id)
+                    .map(|b| b.line_count())
+                    .unwrap_or(1)
+            })
+            .collect();
 
         let layout = LayoutEngine::compute(
             area,
@@ -89,7 +98,7 @@ impl RenderPipeline {
             state.intelligence_panel_open,
             state.bottom_panel_open,
             state.command_palette_open,
-            &pane_line_counts
+            &pane_line_counts,
         );
 
         // 1. Render Top Bar
@@ -129,20 +138,34 @@ impl RenderPipeline {
         for (i, pane_layout) in layout.panes.iter().enumerate() {
             let pane = &panes[i];
             let buffer = state.editor.workspace.buffers.get(&pane.buffer_id).unwrap();
-            let document = state.editor.workspace.documents.get(&pane.buffer_id).unwrap();
+            let document = state
+                .editor
+                .workspace
+                .documents
+                .get(&pane.buffer_id)
+                .unwrap();
 
-            self.render_line_numbers(buf, pane_layout, pane.scroll_row, buffer.line_count(), pane.cursor.row, state.theme, &state.diagnostics);
+            self.render_line_numbers(
+                buf,
+                pane_layout,
+                pane.scroll_row,
+                buffer.line_count(),
+                pane.cursor.row,
+                state.theme,
+                &state.diagnostics,
+            );
             self.render_text(buf, pane_layout, buffer, document, pane, state);
 
             // Only capture cursor info for active pane
             if i == state.editor.workspace.active_pane {
                 let cursor_line_text = buffer.line(pane.cursor.row);
-                let cursor_renderer_copy = CursorRenderer::new(cursor_shape, self.text_renderer.tab_width());
+                let cursor_renderer_copy =
+                    CursorRenderer::new(cursor_shape, self.text_renderer.tab_width());
 
                 let mut viewport = crate::renderer::viewport::Viewport::new(
                     pane_layout.text_area.height as usize,
                     pane_layout.text_area.width as usize,
-                    buffer.line_count()
+                    buffer.line_count(),
                 );
                 viewport.set_scroll_row(pane.scroll_row);
                 viewport.set_scroll_col(pane.scroll_col);
@@ -167,7 +190,8 @@ impl RenderPipeline {
                     state.theme,
                     final_cursor_info.screen_position.col,
                     final_cursor_info.screen_position.row,
-                ).render(area, buf);
+                )
+                .render(area, buf);
             }
         }
 
@@ -182,20 +206,27 @@ impl RenderPipeline {
                     final_cursor_info.screen_position.col,
                     final_cursor_info.screen_position.row,
                     10,
-                ).render(area, buf);
+                )
+                .render(area, buf);
             }
 
-            if state.editor.mode == gic_core::EditorMode::Normal && state.editor.quick_fix_menu_open {
+            if state.editor.mode == gic_core::EditorMode::Normal && state.editor.quick_fix_menu_open
+            {
                 // Find diagnostics for the current row that have quick fixes
                 let active_pane = &state.editor.workspace.panes[state.editor.workspace.active_pane];
-                if let Some(diag) = state.diagnostics.iter().find(|d| d.row == active_pane.cursor.row && !d.quick_fixes.is_empty()) {
+                if let Some(diag) = state
+                    .diagnostics
+                    .iter()
+                    .find(|d| d.row == active_pane.cursor.row && !d.quick_fixes.is_empty())
+                {
                     QuickFixPopup::new(
                         &diag.quick_fixes,
                         state.editor.quick_fix_selected_index,
                         state.theme,
                         final_cursor_info.screen_position.col,
                         final_cursor_info.screen_position.row,
-                    ).render(area, buf);
+                    )
+                    .render(area, buf);
                 }
             }
         }
@@ -205,18 +236,29 @@ impl RenderPipeline {
 
     fn render_top_bar(&self, buf: &mut Buffer, layout: &EditorLayout, state: &RenderState<'_>) {
         let active_pane = &state.editor.workspace.panes[state.editor.workspace.active_pane];
-        let document = state.editor.workspace.documents.get(&active_pane.buffer_id).unwrap();
+        let document = state
+            .editor
+            .workspace
+            .documents
+            .get(&active_pane.buffer_id)
+            .unwrap();
 
-        let file_name = document.path.as_ref()
+        let file_name = document
+            .path
+            .as_ref()
             .and_then(|p| p.file_name())
             .and_then(|n| n.to_str())
             .unwrap_or("[Untitled]");
-        let file_ext = document.path.as_ref()
+        let file_ext = document
+            .path
+            .as_ref()
             .and_then(|p| p.extension())
             .and_then(|e| e.to_str())
             .unwrap_or("");
 
-        let lang_name = self.language_registry.resolve_by_filename(file_name)
+        let lang_name = self
+            .language_registry
+            .resolve_by_filename(file_name)
             .or_else(|| self.language_registry.resolve_by_extension(file_ext))
             .map(|d| d.name)
             .unwrap_or("Plain Text");
@@ -257,19 +299,31 @@ impl RenderPipeline {
         buffer: &TextBuffer,
         document: &Document,
         pane: &gic_core::workspace::pane::EditorPane,
-        state: &RenderState<'_>
+        state: &RenderState<'_>,
     ) {
         if pane_layout.text_area.width == 0 || pane_layout.text_area.height == 0 {
             return;
         }
 
-        let file_ext = document.path.as_ref().and_then(|p| p.extension()).and_then(|e| e.to_str()).unwrap_or("");
-        let file_name = document.path.as_ref().and_then(|p| p.file_name()).and_then(|n| n.to_str()).unwrap_or("");
+        let file_ext = document
+            .path
+            .as_ref()
+            .and_then(|p| p.extension())
+            .and_then(|e| e.to_str())
+            .unwrap_or("");
+        let file_name = document
+            .path
+            .as_ref()
+            .and_then(|p| p.file_name())
+            .and_then(|n| n.to_str())
+            .unwrap_or("");
 
         let current_ext = Some(file_ext.to_string());
         if self.cached_highlighter_ext != current_ext {
             self.cached_highlighter_ext = current_ext;
-            let lang_def = self.language_registry.resolve_by_filename(file_name)
+            let lang_def = self
+                .language_registry
+                .resolve_by_filename(file_name)
                 .or_else(|| self.language_registry.resolve_by_extension(file_ext));
 
             let highlighter: Box<dyn SyntaxHighlighter> = match lang_def {
@@ -294,8 +348,15 @@ impl RenderPipeline {
             let screen_y = pane_layout.text_area.y + row_offset as u16;
 
             if buffer_row >= vis_end || buffer_row >= buffer.line_count() {
-                let tilde_line = self.text_renderer.render_tilde_line(visible_cols, state.theme);
-                let line_area = Rect::new(pane_layout.text_area.x, screen_y, pane_layout.text_area.width, 1);
+                let tilde_line = self
+                    .text_renderer
+                    .render_tilde_line(visible_cols, state.theme);
+                let line_area = Rect::new(
+                    pane_layout.text_area.x,
+                    screen_y,
+                    pane_layout.text_area.width,
+                    1,
+                );
                 buf.set_line(line_area.x, line_area.y, &tilde_line, line_area.width);
                 continue;
             }
@@ -320,8 +381,12 @@ impl RenderPipeline {
                 buffer_row,
                 Some(&state.editor.search_matches), // search results
                 Some(state.editor.search_query.as_str()), // search query
-                Some(&state.diagnostics), // diagnostics
-                if is_current_line { state.ghost_text.as_deref() } else { None }, // ghost text
+                Some(&state.diagnostics),           // diagnostics
+                if is_current_line {
+                    state.ghost_text.as_deref()
+                } else {
+                    None
+                }, // ghost text
             );
 
             buf.set_line(
@@ -336,19 +401,46 @@ impl RenderPipeline {
         }
     }
 
-    fn render_status_bar(&mut self, buf: &mut Buffer, layout: &EditorLayout, state: &RenderState<'_>) {
+    fn render_status_bar(
+        &mut self,
+        buf: &mut Buffer,
+        layout: &EditorLayout,
+        state: &RenderState<'_>,
+    ) {
         if layout.status_bar_area.height == 0 {
             return;
         }
 
         let active_pane = &state.editor.workspace.panes[state.editor.workspace.active_pane];
-        let document = state.editor.workspace.documents.get(&active_pane.buffer_id).unwrap();
-        let buffer = state.editor.workspace.buffers.get(&active_pane.buffer_id).unwrap();
+        let document = state
+            .editor
+            .workspace
+            .documents
+            .get(&active_pane.buffer_id)
+            .unwrap();
+        let buffer = state
+            .editor
+            .workspace
+            .buffers
+            .get(&active_pane.buffer_id)
+            .unwrap();
 
-        let file_name = document.path.as_ref().and_then(|p| p.file_name()).and_then(|n| n.to_str()).unwrap_or("");
-        let file_ext = document.path.as_ref().and_then(|p| p.extension()).and_then(|e| e.to_str()).unwrap_or("");
+        let file_name = document
+            .path
+            .as_ref()
+            .and_then(|p| p.file_name())
+            .and_then(|n| n.to_str())
+            .unwrap_or("");
+        let file_ext = document
+            .path
+            .as_ref()
+            .and_then(|p| p.extension())
+            .and_then(|e| e.to_str())
+            .unwrap_or("");
 
-        let lang_name = self.language_registry.resolve_by_filename(file_name)
+        let lang_name = self
+            .language_registry
+            .resolve_by_filename(file_name)
             .or_else(|| self.language_registry.resolve_by_extension(file_ext))
             .map(|d| d.name);
 
@@ -365,12 +457,23 @@ impl RenderPipeline {
             state.editor.engine.metrics.screen_height,
         );
 
-        let error_count = state.diagnostics.iter()
-            .filter(|d| d.severity == gic_core::language_engine::EngineSeverity::Error).count();
-        let warn_count = state.diagnostics.iter()
-            .filter(|d| d.severity == gic_core::language_engine::EngineSeverity::Warning).count();
+        let error_count = state
+            .diagnostics
+            .iter()
+            .filter(|d| d.severity == gic_core::language_engine::EngineSeverity::Error)
+            .count();
+        let warn_count = state
+            .diagnostics
+            .iter()
+            .filter(|d| d.severity == gic_core::language_engine::EngineSeverity::Warning)
+            .count();
 
-        let mut bar = StatusBarRenderer::new(&file_info, &state.editor.engine.active_mode, state.theme, terminal_size);
+        let mut bar = StatusBarRenderer::new(
+            &file_info,
+            &state.editor.engine.active_mode,
+            state.theme,
+            terminal_size,
+        );
 
         if !state.editor.engine.status_message.is_empty() {
             bar = bar.with_status_message(&state.editor.engine.status_message);

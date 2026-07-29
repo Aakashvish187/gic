@@ -7,6 +7,7 @@ pub enum EditorMode {
     Visual,
     Command,
     Search,
+    Replace,
 }
 
 impl EditorMode {
@@ -17,6 +18,7 @@ impl EditorMode {
             Self::Visual => "VISUAL",
             Self::Command => "COMMAND",
             Self::Search => "SEARCH",
+            Self::Replace => "REPLACE",
         }
     }
 }
@@ -81,6 +83,7 @@ pub struct EditorState {
     pub intelligence_panel_open: bool,
     pub bottom_panel_open: bool,
     pub search_query: String,
+    pub replace_query: String,
     pub search_matches: Vec<CursorPosition>,
     pub force_autocomplete: bool,
     pub autocomplete_selected_index: usize,
@@ -102,6 +105,7 @@ impl EditorState {
             intelligence_panel_open: true,
             bottom_panel_open: false,
             search_query: String::new(),
+            replace_query: String::new(),
             search_matches: Vec::new(),
             force_autocomplete: false,
             autocomplete_selected_index: 0,
@@ -119,7 +123,11 @@ impl EditorState {
     }
 
     pub fn buffer(&self) -> &TextBuffer {
-        let buffer_id = self.workspace.active_pane_ref().map(|p| p.buffer_id).unwrap();
+        let buffer_id = self
+            .workspace
+            .active_pane_ref()
+            .map(|p| p.buffer_id)
+            .unwrap();
         self.workspace.buffers.get(&buffer_id).unwrap()
     }
 
@@ -128,7 +136,11 @@ impl EditorState {
     }
 
     pub fn document(&self) -> &Document {
-        let buffer_id = self.workspace.active_pane_ref().map(|p| p.buffer_id).unwrap();
+        let buffer_id = self
+            .workspace
+            .active_pane_ref()
+            .map(|p| p.buffer_id)
+            .unwrap();
         self.workspace.documents.get(&buffer_id).unwrap()
     }
 
@@ -137,7 +149,10 @@ impl EditorState {
     }
 
     pub fn cursor(&self) -> CursorPosition {
-        self.workspace.active_pane_ref().map(|p| p.cursor).unwrap_or_else(CursorPosition::zero)
+        self.workspace
+            .active_pane_ref()
+            .map(|p| p.cursor)
+            .unwrap_or_else(CursorPosition::zero)
     }
 
     pub fn set_cursor(&mut self, cursor: CursorPosition) {

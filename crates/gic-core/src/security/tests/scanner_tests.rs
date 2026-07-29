@@ -10,8 +10,14 @@ fn scanner() -> SecurityScanner {
 #[test]
 fn test_scanner_clean_content_returns_no_findings() {
     let s = scanner();
-    let findings = s.scan_content(Some(Path::new("config.yaml")), "replicas: 3\nimage: nginx:1.25\n");
-    assert!(findings.is_empty(), "Clean content must not produce security findings");
+    let findings = s.scan_content(
+        Some(Path::new("config.yaml")),
+        "replicas: 3\nimage: nginx:1.25\n",
+    );
+    assert!(
+        findings.is_empty(),
+        "Clean content must not produce security findings"
+    );
 }
 
 #[test]
@@ -42,7 +48,10 @@ fn test_scanner_handles_binary_like_large_content_gracefully() {
     // 2MB of 'x' chars — scanner must skip without panicking
     let large = "x".repeat(2_097_152);
     let findings = s.scan_content(Some(Path::new("large_file.bin")), &large);
-    assert!(findings.is_empty(), "Content > 1MB must be skipped and return empty findings");
+    assert!(
+        findings.is_empty(),
+        "Content > 1MB must be skipped and return empty findings"
+    );
 }
 
 #[test]

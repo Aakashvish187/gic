@@ -13,8 +13,8 @@ use ratatui::layout::Rect;
 use ratatui::style::Style;
 use ratatui::text::{Line, Span};
 
-use gic_core::language_engine::{EngineDiagnostic, EngineSeverity};
 use crate::renderer::themes::Theme;
+use gic_core::language_engine::{EngineDiagnostic, EngineSeverity};
 
 pub struct InlineDiagnosticRenderer<'a> {
     pub diagnostic: &'a EngineDiagnostic,
@@ -36,12 +36,16 @@ impl<'a> InlineDiagnosticRenderer<'a> {
             EngineSeverity::Warning => self.theme.diagnostic_warning,
             EngineSeverity::Info | EngineSeverity::Hint => self.theme.diagnostic_info,
         };
-        
-        let style = Style::default().fg(severity_color).bg(self.theme.background);
+
+        let style = Style::default()
+            .fg(severity_color)
+            .bg(self.theme.background);
 
         // Fill background
         for x in area.x..area.x + area.width {
-            buf.get_mut(x, area.y).set_style(Style::default().bg(self.theme.background)).set_symbol(" ");
+            buf.get_mut(x, area.y)
+                .set_style(Style::default().bg(self.theme.background))
+                .set_symbol(" ");
         }
 
         let mut spans = Vec::new();
@@ -56,11 +60,11 @@ impl<'a> InlineDiagnosticRenderer<'a> {
         // Icon + Message
         let icon = self.diagnostic.severity.icon();
         let msg = format!("{} {}", icon, self.diagnostic.message);
-        
+
         // Ensure it fits
         let remaining_width = area.width.saturating_sub(self.diagnostic.col as u16 + 3);
         let truncated: String = msg.chars().take(remaining_width as usize).collect();
-        
+
         spans.push(Span::styled(truncated, style));
 
         let line = Line::from(spans);

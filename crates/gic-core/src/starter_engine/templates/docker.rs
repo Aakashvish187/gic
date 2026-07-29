@@ -5,26 +5,34 @@ pub struct DockerComposeStarter;
 
 impl TemplateGenerator for DockerStarter {
     fn generate(&self, config: &ProjectConfig) -> Vec<GeneratedFile> {
-        let language = config.get_answer("language").map(|s| s.as_str()).unwrap_or("Node");
+        let language = config
+            .get_answer("language")
+            .map(|s| s.as_str())
+            .unwrap_or("Node");
 
         let content = match language {
-            "Node" => r#"FROM node:18-alpine
+            "Node" => {
+                r#"FROM node:18-alpine
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
 EXPOSE 3000
 CMD ["npm", "start"]
-"#,
-            "Python" => r#"FROM python:3.9-slim
+"#
+            }
+            "Python" => {
+                r#"FROM python:3.9-slim
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 EXPOSE 8000
 CMD ["python", "app.py"]
-"#,
-            "Java" => r#"FROM maven:3.8-openjdk-11 AS builder
+"#
+            }
+            "Java" => {
+                r#"FROM maven:3.8-openjdk-11 AS builder
 WORKDIR /app
 COPY . .
 RUN mvn clean package -DskipTests
@@ -34,8 +42,10 @@ WORKDIR /app
 COPY --from=builder /app/target/*.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
-"#,
-            "Go" => r#"FROM golang:1.19-alpine AS builder
+"#
+            }
+            "Go" => {
+                r#"FROM golang:1.19-alpine AS builder
 WORKDIR /app
 COPY . .
 RUN go build -o main .
@@ -45,8 +55,10 @@ WORKDIR /app
 COPY --from=builder /app/main .
 EXPOSE 8080
 CMD ["./main"]
-"#,
-            "Rust" => r#"FROM rust:1.68 as builder
+"#
+            }
+            "Rust" => {
+                r#"FROM rust:1.68 as builder
 WORKDIR /usr/src/app
 COPY . .
 RUN cargo install --path .
@@ -55,14 +67,19 @@ FROM debian:bullseye-slim
 RUN apt-get update & apt-get install -y extra-runtime-dependencies & rm -rf /var/lib/apt/lists/*
 COPY --from=builder /usr/local/cargo/bin/myapp /usr/local/bin/myapp
 CMD ["myapp"]
-"#,
-            "PHP" => r#"FROM php:8.1-apache
+"#
+            }
+            "PHP" => {
+                r#"FROM php:8.1-apache
 COPY src/ /var/www/html/
 EXPOSE 80
-"#,
-            _ => r#"FROM ubuntu:latest
+"#
+            }
+            _ => {
+                r#"FROM ubuntu:latest
 CMD ["echo", "Hello World"]
-"#,
+"#
+            }
         };
 
         vec![GeneratedFile {
@@ -74,10 +91,14 @@ CMD ["echo", "Hello World"]
 
 impl TemplateGenerator for DockerComposeStarter {
     fn generate(&self, config: &ProjectConfig) -> Vec<GeneratedFile> {
-        let stack = config.get_answer("stack").map(|s| s.as_str()).unwrap_or("Node + PostgreSQL");
+        let stack = config
+            .get_answer("stack")
+            .map(|s| s.as_str())
+            .unwrap_or("Node + PostgreSQL");
 
         let content = match stack {
-            "Node + PostgreSQL" => r#"version: '3.8'
+            "Node + PostgreSQL" => {
+                r#"version: '3.8'
 services:
   app:
     build: .
@@ -98,8 +119,10 @@ services:
 
 volumes:
   pgdata:
-"#,
-            "Redis" => r#"version: '3.8'
+"#
+            }
+            "Redis" => {
+                r#"version: '3.8'
 services:
   redis:
     image: redis:alpine
@@ -110,8 +133,10 @@ services:
 
 volumes:
   redisdata:
-"#,
-            "MongoDB" => r#"version: '3.8'
+"#
+            }
+            "MongoDB" => {
+                r#"version: '3.8'
 services:
   mongodb:
     image: mongo:latest
@@ -125,8 +150,10 @@ services:
 
 volumes:
   mongodata:
-"#,
-            "WordPress" => r#"version: '3.8'
+"#
+            }
+            "WordPress" => {
+                r#"version: '3.8'
 services:
   wordpress:
     image: wordpress:latest
@@ -151,8 +178,10 @@ services:
 
 volumes:
   db_data:
-"#,
-            "ELK" => r#"version: '3.8'
+"#
+            }
+            "ELK" => {
+                r#"version: '3.8'
 services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.9
@@ -166,8 +195,10 @@ services:
       - "5601:5601"
     depends_on:
       - elasticsearch
-"#,
-            "Prometheus + Grafana" => r#"version: '3.8'
+"#
+            }
+            "Prometheus + Grafana" => {
+                r#"version: '3.8'
 services:
   prometheus:
     image: prom/prometheus:latest
@@ -179,8 +210,10 @@ services:
       - "3000:3000"
     depends_on:
       - prometheus
-"#,
-            "Nginx" => r#"version: '3.8'
+"#
+            }
+            "Nginx" => {
+                r#"version: '3.8'
 services:
   web:
     image: nginx:alpine
@@ -188,13 +221,16 @@ services:
       - "80:80"
     volumes:
       - ./html:/usr/share/nginx/html
-"#,
-            _ => r#"version: '3.8'
+"#
+            }
+            _ => {
+                r#"version: '3.8'
 services:
   app:
     image: busybox
     command: echo "Hello World"
-"#,
+"#
+            }
         };
 
         vec![GeneratedFile {

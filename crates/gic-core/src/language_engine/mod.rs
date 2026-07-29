@@ -4,15 +4,15 @@
 //! Each supported language/format implements the `LanguageEngine` trait
 //! to provide diagnostics, completions, hover documentation, and quick fixes.
 
-pub mod yaml_engine;
-pub mod docker_engine;
-pub mod terraform_engine;
 pub mod bash_engine;
-pub mod spell_checker;
-pub mod generic_engine;
 pub mod context;
-pub mod schema;
+pub mod docker_engine;
+pub mod generic_engine;
 pub mod kubernetes_schema;
+pub mod schema;
+pub mod spell_checker;
+pub mod terraform_engine;
+pub mod yaml_engine;
 
 use std::collections::HashMap;
 
@@ -69,9 +69,16 @@ pub struct EngineDiagnostic {
 }
 
 impl EngineDiagnostic {
-    pub fn error(row: usize, col: usize, message: impl Into<String>, source: impl Into<String>) -> Self {
+    pub fn error(
+        row: usize,
+        col: usize,
+        message: impl Into<String>,
+        source: impl Into<String>,
+    ) -> Self {
         Self {
-            row, col, length: 0,
+            row,
+            col,
+            length: 0,
             severity: EngineSeverity::Error,
             message: message.into(),
             code: None,
@@ -80,9 +87,16 @@ impl EngineDiagnostic {
         }
     }
 
-    pub fn warning(row: usize, col: usize, message: impl Into<String>, source: impl Into<String>) -> Self {
+    pub fn warning(
+        row: usize,
+        col: usize,
+        message: impl Into<String>,
+        source: impl Into<String>,
+    ) -> Self {
         Self {
-            row, col, length: 0,
+            row,
+            col,
+            length: 0,
             severity: EngineSeverity::Warning,
             message: message.into(),
             code: None,
@@ -91,9 +105,16 @@ impl EngineDiagnostic {
         }
     }
 
-    pub fn hint(row: usize, col: usize, message: impl Into<String>, source: impl Into<String>) -> Self {
+    pub fn hint(
+        row: usize,
+        col: usize,
+        message: impl Into<String>,
+        source: impl Into<String>,
+    ) -> Self {
         Self {
-            row, col, length: 0,
+            row,
+            col,
+            length: 0,
             severity: EngineSeverity::Hint,
             message: message.into(),
             code: None,
@@ -134,7 +155,11 @@ pub struct Completion {
 }
 
 impl Completion {
-    pub fn new(label: impl Into<String>, insert_text: impl Into<String>, kind: CompletionKind) -> Self {
+    pub fn new(
+        label: impl Into<String>,
+        insert_text: impl Into<String>,
+        kind: CompletionKind,
+    ) -> Self {
         Self {
             label: label.into(),
             insert_text: insert_text.into(),
@@ -239,10 +264,18 @@ pub struct EngineQuickFix {
 }
 
 impl EngineQuickFix {
-    pub fn new(title: impl Into<String>, row: usize, col: usize, replace_length: usize, new_text: impl Into<String>) -> Self {
+    pub fn new(
+        title: impl Into<String>,
+        row: usize,
+        col: usize,
+        replace_length: usize,
+        new_text: impl Into<String>,
+    ) -> Self {
         Self {
             title: title.into(),
-            row, col, replace_length,
+            row,
+            col,
+            replace_length,
             new_text: new_text.into(),
             is_preferred: false,
         }
@@ -348,7 +381,10 @@ impl LanguageEngineRegistry {
         );
 
         // Generic fallback (registered last, not mapped to any extension)
-        self.engines.insert("generic".to_string(), Box::new(generic_engine::GenericEngine));
+        self.engines.insert(
+            "generic".to_string(),
+            Box::new(generic_engine::GenericEngine),
+        );
     }
 
     fn register_engine(
@@ -388,7 +424,12 @@ impl LanguageEngineRegistry {
     }
 
     /// Resolves by analyzing file content (e.g., Kubernetes vs plain YAML).
-    pub fn resolve_with_content(&self, filename: &str, extension: &str, content: &str) -> &dyn LanguageEngine {
+    pub fn resolve_with_content(
+        &self,
+        filename: &str,
+        extension: &str,
+        content: &str,
+    ) -> &dyn LanguageEngine {
         // For YAML files, check if it's Kubernetes
         if extension == "yaml" || extension == "yml" {
             if is_kubernetes_yaml(content) {

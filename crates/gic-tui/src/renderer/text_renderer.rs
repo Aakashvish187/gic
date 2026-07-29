@@ -138,11 +138,15 @@ impl TextRenderer {
 
                 // Determine if this character is selected
                 let is_selected = self.is_char_selected(selection, line_row, display_col);
-                
+
                 // Determine if this character is a search match
                 let is_search_match = search_results.map_or(false, |results| {
                     let query_len = search_query.map_or(1, |q| q.chars().count().max(1));
-                    results.iter().any(|pos| pos.row == line_row && display_col >= pos.col && display_col < pos.col + query_len)
+                    results.iter().any(|pos| {
+                        pos.row == line_row
+                            && display_col >= pos.col
+                            && display_col < pos.col + query_len
+                    })
                 });
 
                 let mut char_bg = if is_selected {
@@ -150,10 +154,10 @@ impl TextRenderer {
                 } else {
                     base_bg
                 };
-                
+
                 let mut char_fg = fg;
                 let mut modifier = token_style.add_modifier;
-                
+
                 if is_search_match && !is_selected {
                     char_bg = Color::Yellow;
                     char_fg = Color::Black;
@@ -162,11 +166,17 @@ impl TextRenderer {
                 // Check for diagnostics overlapping this character
                 if let Some(diags) = diagnostics {
                     for d in diags {
-                        if d.row == line_row && display_col >= d.col && display_col < d.col + d.length {
+                        if d.row == line_row
+                            && display_col >= d.col
+                            && display_col < d.col + d.length
+                        {
                             modifier = modifier | Modifier::UNDERLINED;
                             if d.severity == gic_core::language_engine::EngineSeverity::Error {
                                 char_fg = theme.diagnostic_error;
-                            } else if d.severity == gic_core::language_engine::EngineSeverity::Warning && char_fg != theme.diagnostic_error {
+                            } else if d.severity
+                                == gic_core::language_engine::EngineSeverity::Warning
+                                && char_fg != theme.diagnostic_error
+                            {
                                 char_fg = theme.diagnostic_warning;
                             }
                         }
@@ -190,7 +200,9 @@ impl TextRenderer {
         }
 
         if let Some(gt) = ghost_text {
-            let gt_style = Style::default().fg(Color::DarkGray).add_modifier(Modifier::ITALIC);
+            let gt_style = Style::default()
+                .fg(Color::DarkGray)
+                .add_modifier(Modifier::ITALIC);
             let display_gt = if let Some(idx) = gt.find('\n') {
                 format!("{}...", &gt[..idx])
             } else {
@@ -259,11 +271,15 @@ impl TextRenderer {
 
             // Determine if this character is selected
             let is_selected = self.is_char_selected(selection, line_row, display_col);
-            
+
             // Determine if this character is a search match
             let is_search_match = search_results.map_or(false, |results| {
                 let query_len = search_query.map_or(1, |q| q.chars().count().max(1));
-                results.iter().any(|pos| pos.row == line_row && display_col >= pos.col && display_col < pos.col + query_len)
+                results.iter().any(|pos| {
+                    pos.row == line_row
+                        && display_col >= pos.col
+                        && display_col < pos.col + query_len
+                })
             });
 
             let mut char_bg = if is_selected {
@@ -271,10 +287,10 @@ impl TextRenderer {
             } else {
                 base_bg
             };
-            
+
             let mut char_fg = base_fg;
             let mut modifier = Modifier::empty();
-            
+
             if is_search_match && !is_selected {
                 char_bg = Color::Yellow;
                 char_fg = Color::Black;
@@ -287,14 +303,19 @@ impl TextRenderer {
                         modifier = modifier | Modifier::UNDERLINED;
                         if d.severity == gic_core::language_engine::EngineSeverity::Error {
                             char_fg = theme.diagnostic_error;
-                        } else if d.severity == gic_core::language_engine::EngineSeverity::Warning && char_fg != theme.diagnostic_error {
+                        } else if d.severity == gic_core::language_engine::EngineSeverity::Warning
+                            && char_fg != theme.diagnostic_error
+                        {
                             char_fg = theme.diagnostic_warning;
                         }
                     }
                 }
             }
 
-            let style = Style::default().fg(char_fg).bg(char_bg).add_modifier(modifier);
+            let style = Style::default()
+                .fg(char_fg)
+                .bg(char_bg)
+                .add_modifier(modifier);
 
             let display_text = if ch == '\t' {
                 " ".repeat(ch_width)
@@ -401,5 +422,3 @@ impl TextRenderer {
         Line::from(spans)
     }
 }
-
-

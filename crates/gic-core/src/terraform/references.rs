@@ -131,10 +131,9 @@ impl ReferenceResolver {
                         }
                         InterpolationKind::ModuleOutput {
                             ref module_name, ..
+                        } if !table.declared_modules.contains(module_name) => {
+                            unresolved.push((format!("module.{module_name}"), expr.span));
                         }
-                            if !table.declared_modules.contains(module_name) => {
-                                unresolved.push((format!("module.{module_name}"), expr.span));
-                            }
                         _ => {}
                     }
                 }

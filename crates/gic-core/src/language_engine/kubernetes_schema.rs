@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use crate::language_engine::schema::{LanguageSchema, SchemaDataType, SchemaNode, SchemaProperty};
+use std::collections::HashMap;
 
 pub struct KubernetesSchema {
     nodes: HashMap<String, SchemaNode>,
@@ -105,7 +105,8 @@ impl LanguageSchema for KubernetesSchema {
     fn resolve_path(&self, path: &[String], resource_kind: Option<&str>) -> Option<&SchemaNode> {
         if path.is_empty() {
             match resource_kind {
-                Some("Deployment") | Some("ReplicaSet") | Some("DaemonSet") | Some("StatefulSet") => return self.nodes.get("DeploymentSpec"),
+                Some("Deployment") | Some("ReplicaSet") | Some("DaemonSet")
+                | Some("StatefulSet") => return self.nodes.get("DeploymentSpec"),
                 Some("Pod") => return self.nodes.get("PodSpec"),
                 _ => return None,
             }

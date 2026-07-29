@@ -28,7 +28,9 @@ impl SecurityCache {
     }
 
     pub fn get_file_findings(&self, path: &PathBuf) -> Option<Vec<SecurityFinding>> {
-        self.file_cache.get(path).map(|e| e.value().findings.clone())
+        self.file_cache
+            .get(path)
+            .map(|e| e.value().findings.clone())
     }
 
     pub fn put_file_findings(&self, path: PathBuf, findings: Vec<SecurityFinding>) {
@@ -37,7 +39,13 @@ impl SecurityCache {
             .unwrap_or_default()
             .as_millis() as u64;
 
-        self.file_cache.insert(path, CachedFileScan { findings, timestamp_ms });
+        self.file_cache.insert(
+            path,
+            CachedFileScan {
+                findings,
+                timestamp_ms,
+            },
+        );
     }
 
     pub fn get_report(&self, key: &str) -> Option<SecurityReport> {

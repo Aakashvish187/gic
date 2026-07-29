@@ -1,8 +1,7 @@
 use std::fmt;
 
 /// Predefined configuration profiles for the Rule Engine.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
 pub enum RuleProfile {
     /// Enable all rules and treat warnings as errors.
     Strict,
@@ -20,7 +19,6 @@ pub enum RuleProfile {
     /// A custom, user-defined profile.
     Custom(String),
 }
-
 
 impl fmt::Display for RuleProfile {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

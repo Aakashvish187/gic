@@ -34,13 +34,13 @@ mod tests {
     fn test_should_render_dirty() {
         let config = UIConfig::default();
         let engine = RenderEngine::new(&config);
-        
+
         let mut dirty = DirtyRegions::default();
         assert!(engine.should_render(&dirty));
-        
+
         dirty.clear();
         assert!(!engine.should_render(&dirty));
-        
+
         dirty.mark_line(5);
         assert!(engine.should_render(&dirty));
     }

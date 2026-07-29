@@ -23,7 +23,11 @@ fn test_empty_sources_return_no_findings() {
 #[test]
 fn test_docker_source_converts_privileged_rule() {
     let analyzer = SecurityAnalyzer::new();
-    let diag = make_diagnostic("DOCK001", DiagnosticLevel::Security, "Privileged container detected");
+    let diag = make_diagnostic(
+        "DOCK001",
+        DiagnosticLevel::Security,
+        "Privileged container detected",
+    );
     let findings = analyzer.analyze_source(EngineDiagnosticSource::Docker(&[diag]));
     assert!(
         !findings.is_empty(),
@@ -34,7 +38,11 @@ fn test_docker_source_converts_privileged_rule() {
 #[test]
 fn test_kubernetes_source_converts_k8s_rule() {
     let analyzer = SecurityAnalyzer::new();
-    let diag = make_diagnostic("K8S002", DiagnosticLevel::Security, "Host PID namespace enabled");
+    let diag = make_diagnostic(
+        "K8S002",
+        DiagnosticLevel::Security,
+        "Host PID namespace enabled",
+    );
     let findings = analyzer.analyze_source(EngineDiagnosticSource::Kubernetes(&[diag]));
     assert!(
         !findings.is_empty(),
@@ -45,7 +53,11 @@ fn test_kubernetes_source_converts_k8s_rule() {
 #[test]
 fn test_terraform_source_converts_tf_rule() {
     let analyzer = SecurityAnalyzer::new();
-    let diag = make_diagnostic("TF001", DiagnosticLevel::Security, "S3 bucket public ACL enabled");
+    let diag = make_diagnostic(
+        "TF001",
+        DiagnosticLevel::Security,
+        "S3 bucket public ACL enabled",
+    );
     let findings = analyzer.analyze_source(EngineDiagnosticSource::Terraform(&[diag]));
     assert!(
         !findings.is_empty(),
@@ -56,7 +68,11 @@ fn test_terraform_source_converts_tf_rule() {
 #[test]
 fn test_git_source_converts_git_rule() {
     let analyzer = SecurityAnalyzer::new();
-    let diag = make_diagnostic("GIT001", DiagnosticLevel::Warning, "Force push to protected branch");
+    let diag = make_diagnostic(
+        "GIT001",
+        DiagnosticLevel::Warning,
+        "Force push to protected branch",
+    );
     let findings = analyzer.analyze_source(EngineDiagnosticSource::Git(&[diag]));
     assert!(
         !findings.is_empty(),
@@ -77,7 +93,10 @@ fn test_analyze_all_aggregates_multiple_sources() {
         EngineDiagnosticSource::Terraform(&[tf_diag]),
     ]);
 
-    assert!(findings.len() >= 3, "All three engine sources must contribute findings");
+    assert!(
+        findings.len() >= 3,
+        "All three engine sources must contribute findings"
+    );
 }
 
 #[test]
@@ -87,5 +106,8 @@ fn test_non_security_rules_are_excluded() {
     let diag = make_diagnostic("LINT001", DiagnosticLevel::Warning, "Trailing whitespace");
     let findings = analyzer.analyze_source(EngineDiagnosticSource::Docker(&[diag]));
     // Docker adapter only passes DOCK* rules — LINT* should produce no findings
-    assert!(findings.is_empty(), "Non-domain rules must not produce findings");
+    assert!(
+        findings.is_empty(),
+        "Non-domain rules must not produce findings"
+    );
 }

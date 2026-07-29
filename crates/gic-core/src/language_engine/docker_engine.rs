@@ -1,6 +1,8 @@
 //! # Dockerfile Language Engine
 
-use super::{Completion, CompletionKind, EngineDiagnostic, EngineQuickFix, HoverInfo, LanguageEngine};
+use super::{
+    Completion, CompletionKind, EngineDiagnostic, EngineQuickFix, HoverInfo, LanguageEngine,
+};
 
 pub struct DockerEngine;
 
@@ -40,7 +42,11 @@ impl DockerEngine {
                     );
                 }
                 // Check for missing tag
-                if !image.contains(':') && !image.contains(" AS ") && !image.contains(" as ") && image != "scratch" {
+                if !image.contains(':')
+                    && !image.contains(" AS ")
+                    && !image.contains(" as ")
+                    && image != "scratch"
+                {
                     let col = line.find(image).unwrap_or(5);
                     diagnostics.push(
                         EngineDiagnostic::warning(row, col,
@@ -55,36 +61,50 @@ impl DockerEngine {
             // Check RUN with apt-get without -y
             if upper.starts_with("RUN ") {
                 let cmd = &trimmed[4..];
-                if cmd.contains("apt-get install") && !cmd.contains("-y") && !cmd.contains("--yes") {
+                if cmd.contains("apt-get install") && !cmd.contains("-y") && !cmd.contains("--yes")
+                {
                     diagnostics.push(
-                        EngineDiagnostic::warning(row, 4,
+                        EngineDiagnostic::warning(
+                            row,
+                            4,
                             "apt-get install without '-y' flag will fail in non-interactive mode",
-                            "docker")
-                            .with_code("DKR002")
+                            "docker",
+                        )
+                        .with_code("DKR002"),
                     );
                 }
                 // Check for apt-get without no-install-recommends
                 if cmd.contains("apt-get install") && !cmd.contains("--no-install-recommends") {
                     diagnostics.push(
-                        EngineDiagnostic::hint(row, 4,
+                        EngineDiagnostic::hint(
+                            row,
+                            4,
                             "Consider using '--no-install-recommends' to reduce image size",
-                            "docker")
-                            .with_code("DKR003")
+                            "docker",
+                        )
+                        .with_code("DKR003"),
                     );
                 }
                 // Check for using sudo
                 if cmd.trim_start().starts_with("sudo ") {
                     diagnostics.push(
-                        EngineDiagnostic::warning(row, 4,
+                        EngineDiagnostic::warning(
+                            row,
+                            4,
                             "Avoid using 'sudo' in Dockerfiles. Commands run as root by default.",
-                            "docker")
-                            .with_code("DKR004")
+                            "docker",
+                        )
+                        .with_code("DKR004"),
                     );
                 }
             }
 
             // Check COPY vs ADD
-            if upper.starts_with("ADD ") && !trimmed.contains("http://") && !trimmed.contains("https://") && !trimmed.contains(".tar") {
+            if upper.starts_with("ADD ")
+                && !trimmed.contains("http://")
+                && !trimmed.contains("https://")
+                && !trimmed.contains(".tar")
+            {
                 diagnostics.push(
                     EngineDiagnostic::hint(row, 0,
                         "Use COPY instead of ADD for simple file copying. ADD has extra features (URLs, tar extraction) that may cause unexpected behavior.",
@@ -98,19 +118,36 @@ impl DockerEngine {
                 let port_str = trimmed[7..].trim();
                 if !port_str.contains('/') && !port_str.is_empty() {
                     diagnostics.push(
-                        EngineDiagnostic::hint(row, 7,
+                        EngineDiagnostic::hint(
+                            row,
+                            7,
                             format!("Consider specifying protocol: 'EXPOSE {}/tcp'", port_str),
-                            "docker")
-                            .with_code("DKR006")
+                            "docker",
+                        )
+                        .with_code("DKR006"),
                     );
                 }
             }
 
             // Check for unknown instructions
             let known_instructions = [
-                "FROM", "RUN", "CMD", "LABEL", "EXPOSE", "ENV", "ADD", "COPY",
-                "ENTRYPOINT", "VOLUME", "USER", "WORKDIR", "ARG", "ONBUILD",
-                "STOPSIGNAL", "HEALTHCHECK", "SHELL",
+                "FROM",
+                "RUN",
+                "CMD",
+                "LABEL",
+                "EXPOSE",
+                "ENV",
+                "ADD",
+                "COPY",
+                "ENTRYPOINT",
+                "VOLUME",
+                "USER",
+                "WORKDIR",
+                "ARG",
+                "ONBUILD",
+                "STOPSIGNAL",
+                "HEALTHCHECK",
+                "SHELL",
             ];
             let first_word = trimmed.split_whitespace().next().unwrap_or("");
             if !first_word.is_empty()
@@ -118,19 +155,27 @@ impl DockerEngine {
                 && !known_instructions.contains(&first_word)
             {
                 diagnostics.push(
-                    EngineDiagnostic::error(row, 0,
+                    EngineDiagnostic::error(
+                        row,
+                        0,
                         format!("Unknown instruction: '{}'", first_word),
-                        "docker")
-                        .with_code("DKR007")
-                        .with_length(first_word.len())
+                        "docker",
+                    )
+                    .with_code("DKR007")
+                    .with_length(first_word.len()),
                 );
             }
         }
 
         if !has_from && !lines.is_empty() {
             diagnostics.push(
-                EngineDiagnostic::error(0, 0, "Dockerfile must start with a FROM instruction", "docker")
-                    .with_code("DKR008")
+                EngineDiagnostic::error(
+                    0,
+                    0,
+                    "Dockerfile must start with a FROM instruction",
+                    "docker",
+                )
+                .with_code("DKR008"),
             );
         }
 
@@ -139,8 +184,12 @@ impl DockerEngine {
 }
 
 impl LanguageEngine for DockerEngine {
-    fn name(&self) -> &'static str { "Dockerfile" }
-    fn id(&self) -> &'static str { "docker" }
+    fn name(&self) -> &'static str {
+        "Dockerfile"
+    }
+    fn id(&self) -> &'static str {
+        "docker"
+    }
 
     fn diagnostics(&self, content: &str) -> Vec<EngineDiagnostic> {
         self.check_dockerfile(content)
@@ -157,16 +206,26 @@ impl LanguageEngine for DockerEngine {
             ("EXPOSE", "Expose port", "EXPOSE 8080"),
             ("ENV", "Set environment variable", "ENV KEY=value"),
             ("WORKDIR", "Set working directory", "WORKDIR /app"),
-            ("ENTRYPOINT", "Container entrypoint", "ENTRYPOINT [\"executable\"]"),
+            (
+                "ENTRYPOINT",
+                "Container entrypoint",
+                "ENTRYPOINT [\"executable\"]",
+            ),
             ("ARG", "Build argument", "ARG VERSION=latest"),
             ("VOLUME", "Create mount point", "VOLUME /data"),
             ("USER", "Set user", "USER appuser"),
             ("LABEL", "Add metadata", "LABEL maintainer=\"name\""),
-            ("HEALTHCHECK", "Health check", "HEALTHCHECK CMD curl -f http://localhost/ || exit 1"),
+            (
+                "HEALTHCHECK",
+                "Health check",
+                "HEALTHCHECK CMD curl -f http://localhost/ || exit 1",
+            ),
         ];
 
         for (name, detail, insert) in &instructions {
-            completions.push(Completion::new(*name, *insert, CompletionKind::Keyword).with_detail(*detail));
+            completions.push(
+                Completion::new(*name, *insert, CompletionKind::Keyword).with_detail(*detail),
+            );
         }
 
         completions

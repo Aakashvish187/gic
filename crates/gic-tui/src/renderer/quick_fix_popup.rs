@@ -1,12 +1,12 @@
+use crate::renderer::themes::Theme;
+use gic_core::language_engine::EngineQuickFix;
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
-    style::{Color, Style, Modifier},
+    style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Clear, List, ListItem, Widget},
 };
-use gic_core::language_engine::EngineQuickFix;
-use crate::renderer::themes::Theme;
 
 pub struct QuickFixPopup<'a> {
     fixes: &'a [EngineQuickFix],
@@ -53,40 +53,37 @@ impl<'a> QuickFixPopup<'a> {
         }
 
         let popup_area = Rect::new(col, row, width, height);
-        
+
         Clear.render(popup_area, buf);
-        
+
         let block = Block::default()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(Color::Yellow))
             .style(Style::default().bg(self.theme.background))
             .title(" Quick Fixes ");
-            
+
         let inner_area = block.inner(popup_area);
         block.render(popup_area, buf);
-        
+
         let mut items = Vec::new();
         for (i, fix) in self.fixes.iter().enumerate() {
             let is_selected = i == self.selected_index;
-            
+
             let mut style = Style::default().fg(self.theme.foreground);
             if is_selected {
                 style = style.bg(self.theme.selection).add_modifier(Modifier::BOLD);
             }
-            
+
             let icon = if fix.is_preferred { "★ " } else { "  " };
             let icon_style = Style::default().fg(Color::Yellow);
-            
+
             let label_span = Span::styled(fix.title.clone(), style);
-            
-            let line = Line::from(vec![
-                Span::styled(icon, icon_style),
-                label_span,
-            ]);
-            
+
+            let line = Line::from(vec![Span::styled(icon, icon_style), label_span]);
+
             items.push(ListItem::new(line).style(style));
         }
-        
+
         let list = List::new(items);
         list.render(inner_area, buf);
     }

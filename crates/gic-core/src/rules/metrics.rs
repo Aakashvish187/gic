@@ -27,9 +27,7 @@ impl RuleEngineMetrics {
     pub fn record_execution(&self, rule_id: &str, time_ns: u64, violations: u64) {
         self.total_evaluations.fetch_add(1, Ordering::Relaxed);
         let mut stats = self.rule_stats.write().unwrap();
-        let rule_stat = stats
-            .entry(rule_id.to_string())
-            .or_default();
+        let rule_stat = stats.entry(rule_id.to_string()).or_default();
         rule_stat.execution_count += 1;
         rule_stat.total_time_ns += time_ns;
         rule_stat.violations_found += violations;
@@ -38,18 +36,14 @@ impl RuleEngineMetrics {
     /// Records a skipped execution for a rule.
     pub fn record_skip(&self, rule_id: &str) {
         let mut stats = self.rule_stats.write().unwrap();
-        let rule_stat = stats
-            .entry(rule_id.to_string())
-            .or_default();
+        let rule_stat = stats.entry(rule_id.to_string()).or_default();
         rule_stat.skipped_count += 1;
     }
 
     /// Records an error encountered by a rule.
     pub fn record_error(&self, rule_id: &str) {
         let mut stats = self.rule_stats.write().unwrap();
-        let rule_stat = stats
-            .entry(rule_id.to_string())
-            .or_default();
+        let rule_stat = stats.entry(rule_id.to_string()).or_default();
         rule_stat.error_count += 1;
     }
 

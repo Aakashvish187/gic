@@ -71,11 +71,11 @@ impl Viewport {
     pub fn scroll_col(&self) -> usize {
         self.scroll_col
     }
-    
+
     pub fn set_scroll_row(&mut self, row: usize) {
         self.scroll_row = row;
     }
-    
+
     pub fn set_scroll_col(&mut self, col: usize) {
         self.scroll_col = col;
     }

@@ -41,7 +41,10 @@ fn test_empty_findings_produces_zero_risk_score() {
 #[test]
 fn test_single_critical_finding_produces_high_risk_score() {
     let reporter = SecurityReporter::new();
-    let findings = vec![make_finding(SecuritySeverity::Critical, SecurityCategory::Secrets)];
+    let findings = vec![make_finding(
+        SecuritySeverity::Critical,
+        SecurityCategory::Secrets,
+    )];
     let report = reporter.build_report(findings);
     // 1 Critical (weight 10) / max_weight 10 => 100%
     assert_eq!(report.risk_score.value(), 100);
@@ -80,8 +83,18 @@ fn test_category_counts_are_accurate() {
     let report = reporter.build_report(findings);
     let secrets_key = SecurityCategory::Secrets.display_name().to_string();
     let net_key = SecurityCategory::Networking.display_name().to_string();
-    assert_eq!(report.category_counts.get(&secrets_key).copied().unwrap_or(0), 2);
-    assert_eq!(report.category_counts.get(&net_key).copied().unwrap_or(0), 1);
+    assert_eq!(
+        report
+            .category_counts
+            .get(&secrets_key)
+            .copied()
+            .unwrap_or(0),
+        2
+    );
+    assert_eq!(
+        report.category_counts.get(&net_key).copied().unwrap_or(0),
+        1
+    );
 }
 
 #[test]

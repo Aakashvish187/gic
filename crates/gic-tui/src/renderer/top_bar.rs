@@ -20,7 +20,12 @@ pub struct TopBarRenderer<'a> {
 
 impl<'a> TopBarRenderer<'a> {
     pub fn new(filename: &'a str, file_type: &'a str, theme: &'a Theme) -> Self {
-        Self { filename, file_type, git_branch: None, theme }
+        Self {
+            filename,
+            file_type,
+            git_branch: None,
+            theme,
+        }
     }
 
     pub fn with_git_branch(mut self, branch: &'a str) -> Self {
@@ -35,7 +40,9 @@ impl<'a> Widget for TopBarRenderer<'a> {
             return;
         }
 
-        let bg = Style::default().fg(self.theme.top_bar_fg).bg(self.theme.top_bar_bg);
+        let bg = Style::default()
+            .fg(self.theme.top_bar_fg)
+            .bg(self.theme.top_bar_bg);
         // Fill background
         for x in area.x..area.x + area.width {
             buf.get_mut(x, area.y).set_style(bg).set_symbol(" ");
@@ -52,13 +59,18 @@ impl<'a> Widget for TopBarRenderer<'a> {
                 .add_modifier(Modifier::BOLD),
         ));
 
-        let sep_style = Style::default().fg(self.theme.panel_border).bg(self.theme.top_bar_bg);
+        let sep_style = Style::default()
+            .fg(self.theme.panel_border)
+            .bg(self.theme.top_bar_bg);
         spans.push(Span::styled(" │ ", sep_style));
 
         // Filename
         spans.push(Span::styled(
             self.filename.to_string(),
-            Style::default().fg(self.theme.top_bar_fg).bg(self.theme.top_bar_bg).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(self.theme.top_bar_fg)
+                .bg(self.theme.top_bar_bg)
+                .add_modifier(Modifier::BOLD),
         ));
 
         spans.push(Span::styled(" │ ", sep_style));
@@ -66,7 +78,9 @@ impl<'a> Widget for TopBarRenderer<'a> {
         // File type
         spans.push(Span::styled(
             self.file_type.to_string(),
-            Style::default().fg(self.theme.top_bar_accent).bg(self.theme.top_bar_bg),
+            Style::default()
+                .fg(self.theme.top_bar_accent)
+                .bg(self.theme.top_bar_bg),
         ));
 
         // Git branch
@@ -74,7 +88,9 @@ impl<'a> Widget for TopBarRenderer<'a> {
             spans.push(Span::styled(" │ ", sep_style));
             spans.push(Span::styled(
                 format!("Git: {}", branch),
-                Style::default().fg(Color::Rgb(166, 227, 161)).bg(self.theme.top_bar_bg),
+                Style::default()
+                    .fg(Color::Rgb(166, 227, 161))
+                    .bg(self.theme.top_bar_bg),
             ));
         }
 
@@ -82,7 +98,9 @@ impl<'a> Widget for TopBarRenderer<'a> {
         spans.push(Span::styled(" │ ", sep_style));
         spans.push(Span::styled(
             "Cluster: none",
-            Style::default().fg(self.theme.panel_border).bg(self.theme.top_bar_bg),
+            Style::default()
+                .fg(self.theme.panel_border)
+                .bg(self.theme.top_bar_bg),
         ));
 
         let line = Line::from(spans);

@@ -210,21 +210,20 @@ impl TerraformSecurityAnalyzer {
         if matches!(
             key_lower.as_str(),
             "password" | "secret" | "api_key" | "access_token" | "token" | "secret_key"
-        )
-            && !val.starts_with("${")
-                && !val.starts_with("var.")
-                && !val.is_empty()
-                && val.len() > 3
-            {
-                findings.push(TerraformSecurityFinding {
-                    rule_id: "sec-tf-hardcoded-secret".to_string(),
-                    message: format!(
-                        "Attribute '{}' contains potential hardcoded secret value",
-                        attr.name
-                    ),
-                    severity: TerraformSecuritySeverity::Critical,
-                    span: attr.span,
-                });
-            }
+        ) && !val.starts_with("${")
+            && !val.starts_with("var.")
+            && !val.is_empty()
+            && val.len() > 3
+        {
+            findings.push(TerraformSecurityFinding {
+                rule_id: "sec-tf-hardcoded-secret".to_string(),
+                message: format!(
+                    "Attribute '{}' contains potential hardcoded secret value",
+                    attr.name
+                ),
+                severity: TerraformSecuritySeverity::Critical,
+                span: attr.span,
+            });
+        }
     }
 }
