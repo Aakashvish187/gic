@@ -231,6 +231,53 @@ impl RenderPipeline {
             }
         }
 
+        // 9. Render Validation Error Popup
+        if let Some(err) = &state.editor.validation_error_popup {
+            use ratatui::widgets::{Block, Borders, Paragraph, Clear};
+            use ratatui::style::{Style, Color, Modifier};
+            use ratatui::text::{Line, Span};
+            use ratatui::layout::Alignment;
+
+            let width = 45;
+            let height = 15;
+            
+            let popup_area = Rect {
+                x: area.x + (area.width.saturating_sub(width)) / 2,
+                y: area.y + (area.height.saturating_sub(height)) / 2,
+                width: width.min(area.width),
+                height: height.min(area.height),
+            };
+
+            Clear.render(popup_area, buf);
+            
+            let block = Block::default()
+                .title(" ❌ YAML Validation Failed ")
+                .title_alignment(Alignment::Center)
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::Red));
+                
+            let text = vec![
+                Line::from(vec![Span::styled(format!("Line: {}", err.row + 1), Style::default().fg(Color::Yellow))]),
+                Line::from(vec![Span::styled(format!("Column: {}", err.col + 1), Style::default().fg(Color::Yellow))]),
+                Line::from(""),
+                Line::from(vec![Span::styled("Problem:", Style::default().add_modifier(Modifier::BOLD))]),
+                Line::from(vec![Span::raw(&err.message)]),
+                Line::from(""),
+                Line::from(vec![Span::styled("Suggestions:", Style::default().add_modifier(Modifier::BOLD))]),
+                Line::from("• Check indentation"),
+                Line::from("• Replace tabs with spaces"),
+                Line::from("• Verify nested blocks"),
+                Line::from(""),
+                Line::from(vec![Span::styled("Press:", Style::default().add_modifier(Modifier::BOLD))]),
+                Line::from("F8     → Jump to Error"),
+                Line::from("Ctrl+. → Quick Fix"),
+                Line::from("Esc    → Continue Editing"),
+            ];
+
+            let p = Paragraph::new(text).block(block).alignment(Alignment::Left);
+            p.render(popup_area, buf);
+        }
+
         Ok(final_cursor_info)
     }
 

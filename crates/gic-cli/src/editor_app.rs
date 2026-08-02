@@ -557,6 +557,28 @@ impl EditorApp {
         let control = modifiers.control;
         let alt = modifiers.alt;
 
+        // If validation error popup is open, intercept keys
+        if self.state.validation_error_popup.is_some() {
+            if code == KeyCode::Esc {
+                self.state.validation_error_popup = None;
+                self.state.dirty.mark_full();
+            } else if code == KeyCode::F(8) {
+                if let Some(err) = self.state.validation_error_popup.take() {
+                    self.state.set_cursor(gic_core::CursorPosition { row: err.row, col: err.col });
+                    self.sync_buffer_cursor();
+                    self.state.dirty.mark_full();
+                }
+            } else if control && code == KeyCode::Char('.') {
+                if let Some(err) = self.state.validation_error_popup.take() {
+                    self.state.set_cursor(gic_core::CursorPosition { row: err.row, col: err.col });
+                    self.sync_buffer_cursor();
+                    self.apply_quick_fix(); // Uses cached diagnostics and current cursor position
+                    self.state.dirty.mark_full();
+                }
+            }
+            return None; // Block all other inputs while popup is open
+        }
+
         if control && code == KeyCode::Char('q') {
             let is_modified =
                 self.state.document_mut().is_modified || self.state.buffer_mut().is_modified();
@@ -909,6 +931,17 @@ impl EditorApp {
                     }
                 }
                 KeyCode::Char(ch) => {
+                    if ch == '\t' {
+                        let _ = self.state.buffer_mut().insert_tab(2);
+                        self.sync_cursor_from_buffer();
+                        self.state.document_mut().mark_modified();
+                        self.state.dirty.mark_line(self.state.cursor().row);
+                        self.update_diagnostics();
+                        self.update_completions();
+                        self.update_hover();
+                        return None;
+                    }
+
                     if !self.cached_completions.is_empty() {
                         self.state.autocomplete_selected_index = 0;
                         self.state.autocomplete_scroll_offset = 0;
@@ -1441,19 +1474,72 @@ impl EditorApp {
             .unwrap_or(0)
     }
 
+    /// Safe, verified save with YAML validation
+    fn safe_save(&mut self, target_path: &PathBuf) -> Result<(), String> {
+        let text = self.state.buffer_mut().text();
+
+        // 1. Validation Before Save
+        self.update_diagnostics();
+        let is_yaml_or_k8s = {
+            let file_name = target_path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+            let file_ext = target_path.extension().and_then(|e| e.to_str()).unwrap_or("");
+            let engine = self.language_registry.resolve_with_content(file_name, file_ext, &text);
+            engine.id() == "yaml"
+        };
+
+        if is_yaml_or_k8s {
+            if let Some(err) = self.cached_diagnostics.iter().find(|d| d.severity == gic_core::language_engine::EngineSeverity::Error) {
+                self.state.validation_error_popup = Some(err.clone());
+                self.state.dirty.mark_full();
+                return Err("YAML Validation Failed".to_string());
+            }
+        }
+
+        // 2. In-memory snapshot & File Safety
+        let original_bytes = std::fs::read(target_path).unwrap_or_default();
+
+        let parent_dir = target_path.parent().unwrap_or_else(|| std::path::Path::new("."));
+        let file_stem = target_path.file_name().and_then(|n| n.to_str()).unwrap_or("gic_tmp");
+        let tmp_file_name = format!(".gic_tmp_{}_{}.tmp", file_stem, std::process::id());
+        let tmp_path = parent_dir.join(tmp_file_name);
+
+        if let Err(e) = std::fs::write(&tmp_path, &text) {
+            return Err(format!("Failed to write temp file: {}", e));
+        }
+
+        // 3. Byte-for-byte verification
+        let written_bytes = std::fs::read(&tmp_path).unwrap_or_default();
+        if written_bytes != text.as_bytes() {
+            let _ = std::fs::remove_file(&tmp_path);
+            return Err("Byte-for-byte verification failed! Save aborted to prevent corruption.".to_string());
+        }
+
+        // 4. Atomic Rename & Snapshot Restore on failure
+        if let Err(e) = std::fs::rename(&tmp_path, target_path) {
+            let _ = std::fs::remove_file(&tmp_path);
+            if target_path.exists() {
+                let _ = std::fs::write(target_path, &original_bytes);
+            }
+            return Err(format!("Atomic rename failed: {}", e));
+        }
+
+        self.state.document_mut().mark_saved();
+        Ok(())
+    }
+
     /// Executes a `:` editor command.
     fn execute_command(&mut self, cmd: &str) -> Option<ShutdownReason> {
-        match cmd {
+        let cmd_lower = cmd.trim().to_lowercase();
+        match cmd_lower.as_str() {
+            "help" => {
+                self.state.engine.set_status("Commands: :w (save), :q (quit), :q! (force quit), :wq (save & quit)".to_string());
+            }
             "w" => {
                 let path_opt = self.state.document_mut().path.clone();
                 if let Some(path) = path_opt {
-                    let text = self.state.buffer_mut().text();
-                    match std::fs::write(&path, text) {
+                    match self.safe_save(&path) {
                         Ok(_) => {
-                            self.state.document_mut().mark_saved();
-                            self.state
-                                .engine
-                                .set_status(format!("Written to {:?}", path));
+                            self.state.engine.set_status(format!("Written to {:?}", path));
                         }
                         Err(e) => {
                             self.state.engine.set_status(format!("Save error: {}", e));
@@ -1466,7 +1552,7 @@ impl EditorApp {
                 }
             }
             "q" => {
-                if self.state.document_mut().is_modified {
+                if self.state.document_mut().is_modified || self.state.buffer_mut().is_modified() {
                     self.state.engine.set_status(
                         "Error: No write since last change (use :q! to override)".to_string(),
                     );
@@ -1477,14 +1563,16 @@ impl EditorApp {
             "q!" => {
                 return Some(ShutdownReason::UserRequested);
             }
-            "wq" | "x" => {
+            "wq" | "x" | "wq!" => {
                 let path_opt = self.state.document_mut().path.clone();
                 if let Some(path) = path_opt {
-                    let text = self.state.buffer_mut().text();
-                    let _ = std::fs::write(path, text);
-                    self.state.document_mut().mark_saved();
+                    match self.safe_save(&path) {
+                        Ok(_) => return Some(ShutdownReason::UserRequested),
+                        Err(e) => self.state.engine.set_status(format!("Save error: {}", e)),
+                    }
+                } else {
+                    return Some(ShutdownReason::UserRequested);
                 }
-                return Some(ShutdownReason::UserRequested);
             }
             "fmt" => {
                 let file_name = self
@@ -1524,14 +1612,12 @@ impl EditorApp {
                 }
             }
             c if c.starts_with("w ") => {
-                let target = c[2..].trim();
+                let target = cmd[2..].trim();
                 if !target.is_empty() {
                     let path = PathBuf::from(target);
-                    let text = self.state.buffer_mut().text();
-                    match std::fs::write(&path, text) {
+                    match self.safe_save(&path) {
                         Ok(_) => {
                             self.state.document_mut().set_path(target);
-                            self.state.document_mut().mark_saved();
                             self.state.engine.set_status(format!("Saved to {}", target));
                         }
                         Err(e) => {

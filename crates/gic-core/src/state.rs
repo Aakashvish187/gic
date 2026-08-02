@@ -90,6 +90,7 @@ pub struct EditorState {
     pub autocomplete_scroll_offset: usize,
     pub quick_fix_menu_open: bool,
     pub quick_fix_selected_index: usize,
+    pub validation_error_popup: Option<crate::language_engine::EngineDiagnostic>,
 }
 
 impl EditorState {
@@ -112,6 +113,7 @@ impl EditorState {
             autocomplete_scroll_offset: 0,
             quick_fix_menu_open: false,
             quick_fix_selected_index: 0,
+            validation_error_popup: None,
         }
     }
 
